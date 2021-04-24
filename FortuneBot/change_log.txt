@@ -1,0 +1,10 @@
+``` FortuneBot v0.1.95
+- Option to run local or use proxies(if available) for each task
+- 
+- Bug fixes
+```
+
+
+TODO
+
+ispu toggle Switch to Pickup

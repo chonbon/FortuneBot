@@ -1,0 +1,1 @@
+pyinstaller ./FortuneBot.py --onefile --icon=app.ico --add-binary ".\\driver\\chromedriver.exe;./driver" --add-data ".\\assets\\;./assets" --add-data "C:\\Users\\austi\\AppData\\Local\\Programs\\Python\\Python39\\Lib\\site-packages\\pyfiglet;./pyfiglet"
