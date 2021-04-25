@@ -812,6 +812,8 @@ def bbCartModule(sku,billing,id):
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
     if proxies != False:
+        print(proxy)
+        time.sleep(100)
         proxy = random.choice(proxies)
         soptions = {
             'proxy':{
@@ -1938,7 +1940,10 @@ def app(taskN, isTask):
             print("Invalid Key!")
         print("Redirecting you to login via discord!")
         url = "https://discord.com/api/oauth2/authorize?client_id=829097899501420605&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify"
-        p1 = subprocess.Popen("start chrome /new-tab {}".format(url.replace("&","^&")),shell=True)
+        
+        #p1 = subprocess.Popen("start chrome /new-tab {}".format(url.replace("&","^&")),shell=True)
+        os.startfile(url)
+
         serverRun()
     
     if isTask == "True":
