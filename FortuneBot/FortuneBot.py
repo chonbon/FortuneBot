@@ -19,7 +19,7 @@ from flask import request
 from multiprocessing import Process
 from subprocess import check_call
 from threading import Thread
-
+from tkinter import Tk, Label
 import logging,requests,json,time,os,stat,sys,multiprocessing,random,subprocess,tempfile,jwt,click,pyfiglet
 
 botVersion = "FortuneBot         v0.2"
@@ -1986,13 +1986,8 @@ def callback():
     callbackFlow(code, func)
     return ""
 
-# Main App Method
-def app(taskN, isTask):
-    #webhookModule({"order":"bby01-9999999999","item":"airpods","itemName":"airpods pro","price":"27","q":1,"profile":"test","itemUrl":"https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6427/6427737_sa.jpg;canvasHeight=50;canvasWidth=50"} ,None, 1)
-    #Key auth flow
-    keyAuth = False
-    welcomeText = pyfiglet.figlet_format(str(botVersion),font = "slant")
-
+#INIT
+def appInit():
     settings = settingsModule(1,None)
 
     if settings == False:
@@ -2013,6 +2008,20 @@ def app(taskN, isTask):
     if "qtProfile" not in settings:
         settings["qtProfile"] = ""
         settingsModule(6,"")
+
+    return True
+
+# Main App Method
+def app():
+    welcomeText = pyfiglet.figlet_format(str(botVersion),font = "slant")
+
+    wait = appInit()
+
+    settings = settingsModule(1,None)
+
+    #Key auth flow
+    keyAuth = False
+
     print("Validating Key... ")
     while keyAuth == False:
         settings = settingsModule(1,None)
@@ -2045,15 +2054,7 @@ def app(taskN, isTask):
 
         serverRun()
     
-    if isTask == "True":
-        tasks = taskSaveModule(1, {})
-        task = tasks["taskList"][int(taskN)]
-        print("Running Task "+ task['name'], end='\r')
-        running = False
-        taskMod(task)
-        input()
-    else:
-        running = True
+    running = True
 
     userInput = None
 
@@ -2405,7 +2406,10 @@ if __name__ == "__main__":
        open(filename4, 'w').close()
     if not os.path.exists(filename5):
        open(filename5, 'w').close()
-    try:
-        app(sys.argv[1], sys.argv[2])
-    except:
-        app(None,False)
+    root = Tk()
+    #view = ExampleView(root)
+    #view.pack(side="top", fill="both", expand=True)
+    root.after(1000, app)
+    root.mainloop()
+    
+    
