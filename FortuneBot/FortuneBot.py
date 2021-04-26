@@ -19,32 +19,39 @@ from flask import request
 from multiprocessing import Process
 from subprocess import check_call
 from threading import Thread
-from tkinter import Tk, Label
+from tkinter import *
 import logging,requests,json,time,os,stat,sys,multiprocessing,random,subprocess,tempfile,jwt,click,pyfiglet
 
-botVersion = "FortuneBot         v0.2"
+botVersion = "v0.2"
 exeMode = False
+
+root = Tk()
 
 #JWT Secret
 jwtSecret = 'fortunebotbychon'
 
-# mac
-folder = "./User Data"
-filename = "./User Data/tasks.json"
-filename1 = "./User Data/profiles.json"
-filename2 = "./User Data/webhook.json"
-filename3 = "./User Data/proxies.txt"
-filename4 = "./User Data/accounts.txt"
-filename5 = "./User Data/settings.json"
-
-# win
-folder = ".\\User Data"
-filename = ".\\User Data\\tasks.json"
-filename1 = ".\\User Data\\profiles.json"
-filename2 = ".\\User Data\\webhook.json"
-filename3 = ".\\User Data\\proxies.txt"
-filename4 = ".\\User Data\\accounts.txt"
-filename5 = ".\\User Data\\settings.json"
+if sys.platform == 'win32':
+    # win
+    CHROME_DRIVER_PATH = '.\\driver\\chromedriver.exe'
+    folder = ".\\User Data"
+    folder2 = ".\\User Data\\Temp"
+    filename = ".\\User Data\\tasks.json"
+    filename1 = ".\\User Data\\profiles.json"
+    filename2 = ".\\User Data\\webhook.json"
+    filename3 = ".\\User Data\\proxies.txt"
+    filename4 = ".\\User Data\\accounts.txt"
+    filename5 = ".\\User Data\\settings.json"
+else:
+    # mac
+    CHROME_DRIVER_PATH = './driver/chromedriver'
+    folder = "./User Data"
+    folder2 = "./User Data/Temp"
+    filename = "./User Data/tasks.json"
+    filename1 = "./User Data/profiles.json"
+    filename2 = "./User Data/webhook.json"
+    filename3 = "./User Data/proxies.txt"
+    filename4 = "./User Data/accounts.txt"
+    filename5 = "./User Data/settings.json"
 
 # Discord stuff
 API_ENDPOINT = 'https://discord.com/api/v8'
@@ -498,7 +505,10 @@ def webhookModule(hitInfo, webhook, mode):
 def taskMod(task):
     running = True
     global tempFilename
-    tempFilename = ".\\User Data\\Temp\\"+task["name"]+"Status.json"
+    if sys.platform == 'win32':
+        tempFilename = ".\\User Data\\Temp\\"+task["name"]+"Status.json"
+    else:
+        tempFilename = "./User Data/Temp/"+task["name"]+"Status.json"
     settings = settingsModule(1,None)
     if "forceCheckout" not in settings:
         settings["forceCheckout"] = False
@@ -602,8 +612,6 @@ def taskStatus(status, id):
     temp = status
     global tempFilename
     #tempFilename = ".\\User Data\\status.json"
-    if not os.path.exists(".\\User Data\\Temp"):
-        os.makedirs(".\\User Data\\Temp")
     if not os.path.exists(tempFilename):
         open(tempFilename, 'w').close()
 
@@ -758,14 +766,11 @@ def bbSearchModule(sku,proxy):
 
 # Best Buy Cart Module
 def bbCartModule(sku,billing,id):
-
-    #win
-    CHROME_DRIVER_PATH = '.\\driver\\chromedriver.exe'
-    #mac
-    #CHROME_DRIVER_PATH = './driver/chromedriver'
-
     global tempFilename
-    tempFilename = ".\\User Data\\Temp\\"+billing["name"]+"Status.json"
+    if sys.platform == 'win32':
+        tempFilename = ".\\User Data\\Temp\\"+task["name"]+"Status.json"
+    else:
+        tempFilename = "./User Data/Temp/"+task["name"]+"Status.json"
 
     settings = settingsModule(1,None)
     proxies = proxyModule()
@@ -1457,11 +1462,6 @@ def neweggSearchModule(model,proxy):
 
 # Newegg Cart Module
 def neweggCartModule(model,billing,id):
-    #win
-    CHROME_DRIVER_PATH = '.\\driver\\chromedriver.exe'
-    #mac
-    #CHROME_DRIVER_PATH = './driver/chromedriver'
-
     settings = settingsModule(1,None)
 
     if "headless" not in settings:
@@ -1619,11 +1619,6 @@ def neweggCartModule(model,billing,id):
 
 # Home Depot Search Module
 def homedepotSearchModule(sku,proxy):
-    #win
-    CHROME_DRIVER_PATH = '.\\driver\\chromedriver.exe'
-    #mac
-    #CHROME_DRIVER_PATH = './driver/chromedriver'
-
     startTime = time.time()
 
     baseUrl = "https://www.homedepot.com"
@@ -1833,10 +1828,6 @@ def homedepotCartModule(task,driver):
 
 # Poke Center Search Module
 def pokemonSearchModule(sku, proxy):
-    #win
-    CHROME_DRIVER_PATH = '.\\driver\\chromedriver.exe'
-    #mac
-    #CHROME_DRIVER_PATH = './driver/chromedriver'
 
     startTime = time.time()
 
@@ -1988,6 +1979,24 @@ def callback():
 
 #INIT
 def appInit():
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    if not os.path.exists(folder2):
+        os.makedirs(folder2)
+    if not os.path.exists(filename):
+        open(filename, 'w').close()
+    if not os.path.exists(filename1):
+       open(filename1, 'w').close()
+    if not os.path.exists(filename2):
+       open(filename2, 'w').close()
+    if not os.path.exists(filename3):
+       open(filename3, 'w').close()
+    if not os.path.exists(filename4):
+       open(filename4, 'w').close()
+    if not os.path.exists(filename5):
+       open(filename5, 'w').close()
+
     settings = settingsModule(1,None)
 
     if settings == False:
@@ -2016,8 +2025,6 @@ def app():
     welcomeText = pyfiglet.figlet_format(str(botVersion),font = "slant")
 
     wait = appInit()
-
-    settings = settingsModule(1,None)
 
     #Key auth flow
     keyAuth = False
@@ -2379,37 +2386,49 @@ def app():
             running = False
             return
 
+#############
+#
+# UI
+#
+#############
+
+#Menu Pane
+def mainMenu():
+    frame = Frame(width=200,height=720,bg="#1a1a1a")
+
+    lbl_logo = Label(frame,text="FortuneBot")
+    lbl_version = Label(frame,text=botVersion)
+
+    btn_search = Button(frame,text="Search (Developer)")
+    btn_tasks = Button(frame,text="Tasks")
+    btn_profiles = Button(frame,text="Profiles")
+    btn_settings = Button(frame,text="Settings")
+
+    lbl_logo.grid(row=0,column=0)
+
+    btn_search.grid(row=2,column=0)
+    btn_tasks.grid(row=3,column=0)
+    btn_profiles.grid(row=4,column=0)
+    btn_settings.grid(row=5,column=0)
+
+    lbl_version.grid(row=7,column=0)
+
+    return frame
+
+
 # Main Function
 if __name__ == "__main__":
     multiprocessing.freeze_support()
 
-    # win
-    folder = ".\\User Data"
-    filename = ".\\User Data\\tasks.json"
-    filename1 = ".\\User Data\\profiles.json"
-    filename2 = ".\\User Data\\webhook.json"
-    filename3 = ".\\User Data\\proxies.txt"
-    filename4 = ".\\User Data\\accounts.txt"
-    filename5 = ".\\User Data\\settings.json"
+    wait = appInit()
 
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    if not os.path.exists(filename):
-        open(filename, 'w').close()
-    if not os.path.exists(filename1):
-       open(filename1, 'w').close()
-    if not os.path.exists(filename2):
-       open(filename2, 'w').close()
-    if not os.path.exists(filename3):
-       open(filename3, 'w').close()
-    if not os.path.exists(filename4):
-       open(filename4, 'w').close()
-    if not os.path.exists(filename5):
-       open(filename5, 'w').close()
-    root = Tk()
-    #view = ExampleView(root)
-    #view.pack(side="top", fill="both", expand=True)
-    root.after(1000, app)
+    menu = mainMenu()
+
+    root.resizable(False, False)
+    root.title("FortuneBot")
+    root.geometry('1280x720')
+    #root.after(1000, app)
+    menu.pack(fill=BOTH,side=LEFT)
     root.mainloop()
     
     
