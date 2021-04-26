@@ -803,6 +803,7 @@ def bbCartModule(sku,billing,id):
     if settings["headless"] == False:
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
+        chrome_options.add_argument("--log-level=3")
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
@@ -812,8 +813,6 @@ def bbCartModule(sku,billing,id):
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
     if proxies != False:
-        print(proxy)
-        time.sleep(100)
         proxy = random.choice(proxies)
         soptions = {
             'proxy':{
@@ -897,24 +896,26 @@ def bbCartModule(sku,billing,id):
                     inQueue = False
                     
             time.sleep(1)
-            st = taskStatus(billing['name']+"             Adding to cart!",id)
-            ActionChains(driver).click(addToCartButton).perform()
+            carting = True
 
-            try:
-                cartButton = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[class='btn btn-secondary btn-sm btn-block ']")))
-                driver.get("https://www.bestbuy.com/cart")
-            except TimeoutException:
-                st = taskStatus(billing['name']+"             Error Carting after Queue, trying to add again",id)
+            while carting:
+                st = taskStatus(billing['name']+"            Trying to cart!",id)
                 ActionChains(driver).click(addToCartButton).perform()
-                time.sleep(1)
-                driver.get("https://www.bestbuy.com/cart")
 
+                try:
+                    cartButton = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='dot']")))
+                    if cartButton.text != "0":
+                        carting = False
+                except TimeoutException:
+                    st = taskStatus(billing['name']+"             Did not cart, trying again",id)
+                time.sleep(random.choice([1,1.5,2]))
+
+            driver.get("https://www.bestbuy.com/cart")
             try:
                 checkoutButton = WebDriverWait(driver, 7).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-lg btn-block btn-primary']")))
             except TimeoutException:
                 st = taskStatus(billing['name']+"             Error, Couldnt cart after queue",id)
                 return False
-
         #QT check
         if qtToBuy > 1:
             try:
@@ -1830,6 +1831,104 @@ def homedepotCartModule(task,driver):
     except:
         print("Success!")
 
+# Poke Center Search Module
+def pokemonSearchModule(sku, proxy):
+    #win
+    CHROME_DRIVER_PATH = '.\\driver\\chromedriver.exe'
+    #mac
+    #CHROME_DRIVER_PATH = './driver/chromedriver'
+
+    startTime = time.time()
+
+    baseUrl = "https://www.pokemoncenter.com/product/"
+
+    userAgentList = ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+                     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36',
+                     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36',
+                     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.110 Safari/537.36',
+                     ('Mozilla/5.0 (X11; Linux x86_64) '
+                     'AppleWebKit/537.36 (KHTML, like Gecko) '
+                     'Chrome/63.0.3239.108 '
+                     'Safari/537.36'),
+                     ]
+
+    options = webdriver.ChromeOptions()
+    #options.add_argument('--headless')
+    #options.add_argument('--disable-gpu')
+    #options.add_argument('--disable-blink-features=AutomationControlled')
+    #options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    #options.add_experimental_option('useAutomationExtension', False)
+    #options.add_argument('--window-size=1920,1080')
+    options.add_argument("user-agent="+random.choice(userAgentList))
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+    #run proxy
+    if proxy != None:
+        print("running with proxy: "+ str(proxy))
+        soptions = {
+            'proxy':{
+                'http':"http://"+proxy,
+                'https':"https://"+proxy,
+                'no_proxy': 'localhost,127.0.0.1'
+                }
+        }
+        driver = webdriver.Chrome(resource_path(CHROME_DRIVER_PATH),options=options,seleniumwire_options=soptions)
+        
+    #run local
+    if proxy == None:
+        driver = webdriver.Chrome(resource_path(CHROME_DRIVER_PATH),options=options)
+
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
+    driver.get("https://www.pokemoncenter.com")
+    time.sleep(2)
+    driver.get(baseUrl+sku)
+
+    try:
+        WebDriverWait(driver, 7).until(EC.presence_of_element_located((By.CSS_SELECTOR, "h1[class='_1WH6oLm7bR-AQmemV8WMJR']")))
+
+        try:
+            addToCart = driver.find_element_by_css_selector("button[class='_20FB4-Kigsuh33ROnhb1CX _2EgyS2JF4vSMMGt9KgAEkN _2Vyo6t5xf0vISrGJtN0OKA']")
+
+            if addToCart != None:
+                print("In Stock!")
+                pokemonCartModule(None, driver)
+                return True
+            print("OOS!")
+            return False
+        except:
+            print("OOS!")
+            return False
+    except:
+        print("Error loading webpage")
+        return False
+
+# Pokemon Center Cart Module
+def pokemonCartModule(task, driver):
+    # Change to correct quantity
+    print("Changing quantity")
+    try:
+        qtInput = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[class='_1qlS_PAMoIq7Swm6JTdGW2']")))
+        qtInput.send_keys(2)
+    except:
+        print("quantity not available")
+        return
+
+    #add to cart
+    print("Adding to Cart!")
+
+    addToCart = driver.find_element_by_css_selector("button[class='_20FB4-Kigsuh33ROnhb1CX _2EgyS2JF4vSMMGt9KgAEkN _2Vyo6t5xf0vISrGJtN0OKA']")
+    ActionChains(driver).click(addToCart).perform()
+
+    try:
+        cartLink = WebDriverWait(driver,15).until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[data-count='2']")))
+        print("Added To Cart!")
+    except:
+        print("Unable to add to cart or timed out!")
+        return False
+
+    driver.get("https://www.pokemoncenter.com/cart")
+
 # Handles callback from discord
 def callbackFlow(code,func):
     func()
@@ -1859,10 +1958,10 @@ def callbackFlow(code,func):
                 #print(str(jsonResult))
 
                 if "Success" in jsonResult:
-                    print("Found key binded!")
+                    print("Found binded key!")
                     encodedKey = jwt.encode({"key":jsonResult['Success']}, jwtSecret, algorithm="HS256")
                     temp = encodedKey.decode('utf-8')
-                    print(temp)
+                    #print(temp)
                     settings = settingsModule(4,temp)
                     return
                 print("No Keys binded!")
@@ -1972,7 +2071,7 @@ def app(taskN, isTask):
         # Search Menu
         if str(userInput).lower() == "search" or str(userInput) == "1":
             os.system('cls' if os.name == 'nt' else 'clear')
-            print("Quick Search\nChoose BestBuy, Newegg, Home Depot or Back:")
+            print("Quick Search\nChoose BestBuy, Newegg, Home Depot, Pokemon Center or Back:")
             searchInput = input()
             if str(searchInput).lower() == "bestbuy":
                 print("Enter the sku:")
@@ -1984,8 +2083,11 @@ def app(taskN, isTask):
                 print("Enter the model:")
                 neweggSearchModule(input(), None)
             if str(searchInput).lower() == "home depot":
-                print("Enter the internet# :")
+                print("Enter the internet#:")
                 homedepotSearchModule(input(), None)
+            if str(searchInput).lower() == "pokemon center":
+                print("Enter the sku:")
+                pokemonSearchModule(input(), None)
             if str(searchInput).lower() == "back":
                 userInput = None
                 os.system('cls' if os.name == 'nt' else 'clear')
@@ -2039,24 +2141,27 @@ def app(taskN, isTask):
                     print("Quick Task profile not set, go to settings and set one!")
                     taskInput = None
 
-                print("Enter the sku to start: ")
+                print("Enter the sku to start or type back: ")
                 sku = input()
-                task = {
-                    'name': 'QuickTask'+sku,
-                    'sku':sku,
-                    'quantity':1,
-                    'storePickup':False,
-                    'profile':settings['qtProfile'],
-                    'date':False,
-                    'time':False
-                    }
-                taskSaveModule(2,task)
-                tasks = taskSaveModule(1,{})
+                if str(sku).lower() == "back":
+                    taskInput = None
+                else:
+                    task = {
+                        'name': 'QuickTask'+sku,
+                        'sku':sku,
+                        'quantity':1,
+                        'storePickup':False,
+                        'profile':settings['qtProfile'],
+                        'date':False,
+                        'time':False
+                        }
+                    taskSaveModule(2,task)
+                    tasks = taskSaveModule(1,{})
 
-                if exeMode == True:
-                    subprocess.Popen('start /wait FortuneBot.exe "'+str(len(tasks['taskList'])-1)+'" True', shell=True)
-                if exeMode == False:
-                    subprocess.Popen('start /wait python FortuneBot.py "'+str(len(tasks['taskList'])-1)+'" True', shell=True)
+                    if exeMode == True:
+                        subprocess.Popen('start /wait FortuneBot.exe "'+str(len(tasks['taskList'])-1)+'" True', shell=True)
+                    if exeMode == False:
+                        subprocess.Popen('start /wait python FortuneBot.py "'+str(len(tasks['taskList'])-1)+'" True', shell=True)
             if str(taskInput).lower() == "create" or str(taskInput) == "3":
                 task = {}
                 print("Enter Task Name")
