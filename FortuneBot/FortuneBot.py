@@ -22,7 +22,7 @@ from threading import Thread
 from tkinter import *
 from PIL import ImageTk, Image
 import tkinter.font as font
-import logging,requests,json,time,os,stat,sys,multiprocessing,random,subprocess,tempfile,jwt,click,pyfiglet
+import logging,requests,json,time,os,stat,sys,multiprocessing,random,subprocess,tempfile,jwt,click,re
 
 botVersion = "v0.2"
 
@@ -1954,7 +1954,8 @@ def callbackFlow(code,func):
                 if "Success" in jsonResult:
                     print("Found binded key!")
                     encodedKey = jwt.encode({"key":jsonResult['Success']}, jwtSecret, algorithm="HS256")
-                    temp = encodedKey.decode('utf-8')
+                    temp = encodedKey
+                    #
                     #print(temp)
                     settings = settingsModule(4,temp)
                     return
@@ -2384,14 +2385,50 @@ def app():
             running = False
             return
 
+def appThread():
+    global appT
+    appT = Thread(target=app)
+    appT.start()
+
+def stopAppThread():
+    global appT
+    #appT.join()
+
 #############
 #
 # UI
 #
 #############
 
+#Splash Pane
+class SplashPane:
+    global root
+    def __init__(self):
+        self.frame = Frame(width=1280,height=720,bg="#F06543")
+
+        self.var = StringVar()
+        self.var.set('...')
+
+        self.img = Image.open(assetFolder+"logo-mock1.png")
+        self.img_logo = ImageTk.PhotoImage(self.img.resize((200,200), Image.ANTIALIAS))
+        self.lbl_logo = Label(self.frame,image=self.img_logo)
+        self.lbl_logo.image = self.img_logo
+       
+        self.lbl_header = Label(self.frame,text="FortuneBot",bg="#F06543",font=font.Font(size=45),pady=50)
+
+        self.lbl_status = Label(self.frame,textvariable=self.var,bg="#F06543",font=font.Font(size=30),pady=50)
+
+        self.lbl_header.place(relx = 0.5, rely = 0.0, anchor='n')
+        self.lbl_logo.place(relx = 0.5, rely = 0.5, anchor = 'center')
+        self.lbl_status.place(relx = 0.5, rely = 1.0, anchor='s')
+
+    def setStatus(self,status):
+        self.var.set(status)
+        root.roots.update()
+
 #Menu Pane
 class MenuPane:
+    global root
     def __init__(self):
         self.frame = Frame(width=200,height=720,bg="#141425")
 
@@ -2401,7 +2438,7 @@ class MenuPane:
         self.btn_search = Button(self.frame,text="Search (Developer)",width=50,height=3)
         self.btn_tasks = Button(self.frame,text="Tasks",width=50,height=3)
         self.btn_profiles = Button(self.frame,text="Profiles",width=50,height=3)
-        self.btn_settings = Button(self.frame,text="Settings",width=50,height=3)
+        self.btn_settings = Button(self.frame,text="Settings",width=50,height=3,command=root.showSettings)
 
         self.lbl_logo.grid(row=0,column=0)
 
@@ -2412,51 +2449,48 @@ class MenuPane:
 
         self.lbl_version.grid(row=7,column=0)
 
-    def getPane(self):
-        return self.frame
-
-#Splash Pane
-class SplashPane:
-    global root
+#Settings Pane
+class SettingsPane:
     def __init__(self):
-        self.frame = Frame(width=1280,height=720,bg="#F06543")
-        self.frame.columnconfigure(1,weight=1)
-        self.frame.rowconfigure(2,weight=1)
+        self.frame = Frame(width=1070,height=720)
 
-        self.var = StringVar()
-        self.var.set('...')
-
-        self.img = Image.open(assetFolder+"logo-mock1.png")
-        self.img_logo = ImageTk.PhotoImage(self.img.resize((200,200), Image.ANTIALIAS))
-        self.lbl_logo = Label(self.frame,image=self.img_logo)
-        self.lbl_logo.image = self.img_logo
-       
-        self.lbl_status = Label(self.frame,textvariable=self.var,bg="#F06543")
-
-        self.lbl_logo.grid(row=0,column=0)
-        self.lbl_status.grid(row=1,column=0)
+    def toggleForceCheckout(self):
+        settingsModule(2,not self.settings['forceCheckout'])
+    def toggleDevMode(self):
+        settingsModule(3,not self.settings['headless'])
+    def toggleQueue(self):
+        settingsModule(5,self.queue.get())
 
     def getPane(self):
-        return self.frame
+        self.settings = settingsModule(1, None)
+        self.force = BooleanVar(value=bool(self.settings['forceCheckout']))
+        self.dev = BooleanVar(value=bool(self.settings['headless']))
+        self.queue = IntVar(value=int(self.settings['queueTasks']))
 
-    def setStatus(self,status):
-        self.var.set(status)
-        root.roots.update()
+        self.forceCheckout = Checkbutton(self.frame, text='Force Checkout',variable=self.force, onvalue=True, offvalue=False, command=self.toggleForceCheckout)
+        self.devMode = Checkbutton(self.frame, text='Developer Mode',variable=self.dev, onvalue=True, offvalue=False, command=self.toggleDevMode)
+        self.queueTasks = Entry(self.frame, textvariable=self.queue, validate='key', validatecommand=self.toggleQueue)
+
+        self.forceCheckout.grid(row=0,column=0)
+        self.devMode.grid(row=1,column=0)
+        self.queueTasks.grid(row=2,column=1)
+        return self.frame
 
 #Root Window
 class RootWindow:
+
     def __init__(self):
         self.roots = Tk()
 
         self.splash = SplashPane()
-        self.splashPane = self.splash.getPane()
+        self.splashPane = self.splash.frame
 
         
         self.roots.resizable(False, False)
         self.roots.title("FortuneBot")
         self.roots.geometry('1280x720')
 
-        self.roots.after(1000, app)
+        self.roots.after(1000, appThread)
 
         self.splashPane.pack(fill=BOTH,side=TOP)
         
@@ -2464,11 +2498,19 @@ class RootWindow:
         self.roots.mainloop()
 
     def afterSplash(self):
+        stopAppThread()
         if self.splashPane != None:
             self.splashPane.pack_forget()
-        self.menu = MenuPane().getPane()
+        self.menu = MenuPane().frame
         self.menu.pack(fill=BOTH,side=LEFT)
+        self.content = Frame(width=1070,height=720)
+        self.content.pack(fill=BOTH,side=RIGHT)
 
+    def showSettings(self):
+        if self.content != None:
+            self.content.pack_forget()
+        self.content = SettingsPane()
+        self.content.getPane().pack(fill=BOTH,side=RIGHT)
 root = RootWindow()
 
 # Main Function
