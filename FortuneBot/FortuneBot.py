@@ -20,12 +20,11 @@ from multiprocessing import Process
 from subprocess import check_call
 from threading import Thread
 from tkinter import *
+from PIL import ImageTk, Image
+import tkinter.font as font
 import logging,requests,json,time,os,stat,sys,multiprocessing,random,subprocess,tempfile,jwt,click,pyfiglet
 
 botVersion = "v0.2"
-exeMode = False
-
-root = Tk()
 
 #JWT Secret
 jwtSecret = 'fortunebotbychon'
@@ -33,6 +32,7 @@ jwtSecret = 'fortunebotbychon'
 if sys.platform == 'win32':
     # win
     CHROME_DRIVER_PATH = '.\\driver\\chromedriver.exe'
+    assetFolder = ".\\assets\\"
     folder = ".\\User Data"
     folder2 = ".\\User Data\\Temp"
     filename = ".\\User Data\\tasks.json"
@@ -44,6 +44,7 @@ if sys.platform == 'win32':
 else:
     # mac
     CHROME_DRIVER_PATH = './driver/chromedriver'
+    assetFolder = "./assets/"
     folder = "./User Data"
     folder2 = "./User Data/Temp"
     filename = "./User Data/tasks.json"
@@ -992,7 +993,7 @@ def bbCartModule(sku,billing,id):
                 try:
                     verifyButton = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[data-track='Forgot Password - Continue']")))
                     st = taskStatus(billing['name']+"             You need to verify your account, a code has been sent to your email.",id)
-                    playsound(resource_path('.//assets//decline.wav'))
+                    playsound(resource_path(assetFolder+'decline.wav'))
                     #playsound('.//assets//verify.wav')
                     print("Enter Code Below",flush=True)
                     code = input()
@@ -1374,7 +1375,7 @@ def bbCartModule(sku,billing,id):
                 "profile": billing['profile']['profileName']
                 }
                 webhookModule(hitInfo,{},5)
-                playsound(resource_path('.//assets//decline.wav'))
+                playsound(resource_path(assetFolder+'decline.wav'))
                 return
             if maxQtLimitText == driver.find_element_by_css_selector("div[class='error-spacing']").text:
                 st = taskStatus(billing['name']+"             Max Items reached for this profile and sku",id)
@@ -1400,7 +1401,7 @@ def bbCartModule(sku,billing,id):
             "profile": billing['profile']['profileName']
             }
         webhookModule(hitInfo,{},1)
-        playsound(resource_path('.//assets//success.mp3'))
+        playsound(resource_path(assetFolder+'success.mp3'))
         st = taskStatus(billing['name']+"             Checkout Successful! Total = " + total + " & took " + str(stopTime-startTime),id)
         qtToBuy -= tempPurchaseAmount
         if qtToBuy == 0:
@@ -1922,6 +1923,8 @@ def pokemonCartModule(task, driver):
 
 # Handles callback from discord
 def callbackFlow(code,func):
+    global root
+    splash = root.splash
     func()
     data = {
         'client_id': CLIENT_ID,
@@ -2022,14 +2025,13 @@ def appInit():
 
 # Main App Method
 def app():
-    welcomeText = pyfiglet.figlet_format(str(botVersion),font = "slant")
-
-    wait = appInit()
+    global root
+    splash = root.splash
 
     #Key auth flow
     keyAuth = False
 
-    print("Validating Key... ")
+    splash.setStatus("Validating Key...")
     while keyAuth == False:
         settings = settingsModule(1,None)
         key = settings['key']
@@ -2049,11 +2051,11 @@ def app():
                 #print(str(jsonResult))
 
                 if "Success" in jsonResult:
-                    print("Key Validated, Happy Cooking!")
+                    splash.setStatus("Key Validated, Happy Cooking!")
                     keyAuth = True
                     break
-            print("Invalid Key!")
-        print("Redirecting you to login via discord!")
+            splash.setStatus("Invalid Key!")
+        splash.setStatus("Redirecting you to login via discord!")
         url = "https://discord.com/api/oauth2/authorize?client_id=829097899501420605&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify"
         
         #p1 = subprocess.Popen("start chrome /new-tab {}".format(url.replace("&","^&")),shell=True)
@@ -2061,14 +2063,10 @@ def app():
 
         serverRun()
     
-    running = True
+    time.sleep(2)
+    root.afterSplash()
+    return
 
-    userInput = None
-
-    if running == True:
-        time.sleep(1.5)
-        os.system('cls' if os.name == 'nt' else 'clear')
-        
     while running:
         print(welcomeText)
 
@@ -2393,42 +2391,93 @@ def app():
 #############
 
 #Menu Pane
-def mainMenu():
-    frame = Frame(width=200,height=720,bg="#1a1a1a")
+class MenuPane:
+    def __init__(self):
+        self.frame = Frame(width=200,height=720,bg="#141425")
 
-    lbl_logo = Label(frame,text="FortuneBot")
-    lbl_version = Label(frame,text=botVersion)
+        self.lbl_logo = Label(self.frame,text="FortuneBot",fg="#F06543",bg="#141425",font=font.Font(size=30))
+        self.lbl_version = Label(self.frame,text=botVersion,fg="#F06543",bg="#141425")
 
-    btn_search = Button(frame,text="Search (Developer)")
-    btn_tasks = Button(frame,text="Tasks")
-    btn_profiles = Button(frame,text="Profiles")
-    btn_settings = Button(frame,text="Settings")
+        self.btn_search = Button(self.frame,text="Search (Developer)",width=50,height=3)
+        self.btn_tasks = Button(self.frame,text="Tasks",width=50,height=3)
+        self.btn_profiles = Button(self.frame,text="Profiles",width=50,height=3)
+        self.btn_settings = Button(self.frame,text="Settings",width=50,height=3)
 
-    lbl_logo.grid(row=0,column=0)
+        self.lbl_logo.grid(row=0,column=0)
 
-    btn_search.grid(row=2,column=0)
-    btn_tasks.grid(row=3,column=0)
-    btn_profiles.grid(row=4,column=0)
-    btn_settings.grid(row=5,column=0)
+        self.btn_search.grid(row=2,column=0)
+        self.btn_tasks.grid(row=3,column=0)
+        self.btn_profiles.grid(row=4,column=0)
+        self.btn_settings.grid(row=5,column=0)
 
-    lbl_version.grid(row=7,column=0)
+        self.lbl_version.grid(row=7,column=0)
 
-    return frame
+    def getPane(self):
+        return self.frame
 
+#Splash Pane
+class SplashPane:
+    global root
+    def __init__(self):
+        self.frame = Frame(width=1280,height=720,bg="#F06543")
+        self.frame.columnconfigure(1,weight=1)
+        self.frame.rowconfigure(2,weight=1)
+
+        self.var = StringVar()
+        self.var.set('...')
+
+        self.img = Image.open(assetFolder+"logo-mock1.png")
+        self.img_logo = ImageTk.PhotoImage(self.img.resize((200,200), Image.ANTIALIAS))
+        self.lbl_logo = Label(self.frame,image=self.img_logo)
+        self.lbl_logo.image = self.img_logo
+       
+        self.lbl_status = Label(self.frame,textvariable=self.var,bg="#F06543")
+
+        self.lbl_logo.grid(row=0,column=0)
+        self.lbl_status.grid(row=1,column=0)
+
+    def getPane(self):
+        return self.frame
+
+    def setStatus(self,status):
+        self.var.set(status)
+        root.roots.update()
+
+#Root Window
+class RootWindow:
+    def __init__(self):
+        self.roots = Tk()
+
+        self.splash = SplashPane()
+        self.splashPane = self.splash.getPane()
+
+        
+        self.roots.resizable(False, False)
+        self.roots.title("FortuneBot")
+        self.roots.geometry('1280x720')
+
+        self.roots.after(1000, app)
+
+        self.splashPane.pack(fill=BOTH,side=TOP)
+        
+    def start(self):
+        self.roots.mainloop()
+
+    def afterSplash(self):
+        if self.splashPane != None:
+            self.splashPane.pack_forget()
+        self.menu = MenuPane().getPane()
+        self.menu.pack(fill=BOTH,side=LEFT)
+
+root = RootWindow()
 
 # Main Function
 if __name__ == "__main__":
     multiprocessing.freeze_support()
 
     wait = appInit()
-
-    menu = mainMenu()
-
-    root.resizable(False, False)
-    root.title("FortuneBot")
-    root.geometry('1280x720')
-    #root.after(1000, app)
-    menu.pack(fill=BOTH,side=LEFT)
-    root.mainloop()
+    
+    root.start()
+    
     
     
