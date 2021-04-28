@@ -2437,7 +2437,7 @@ class MenuPane:
 
         self.btn_search = Button(self.frame,text="Search (Developer)",width=50,height=3)
         self.btn_tasks = Button(self.frame,text="Tasks",width=50,height=3)
-        self.btn_profiles = Button(self.frame,text="Profiles",width=50,height=3)
+        self.btn_profiles = Button(self.frame,text="Profiles",width=50,height=3,command=root.showProfiles)
         self.btn_settings = Button(self.frame,text="Settings",width=50,height=3,command=root.showSettings)
 
         self.lbl_logo.grid(row=0,column=0)
@@ -2449,6 +2449,120 @@ class MenuPane:
 
         self.lbl_version.grid(row=7,column=0)
 
+#Profiles Pane
+class ProfilePane:
+    global root
+    def __init__(self):
+        self.frame = Frame(width=1070,height=720)
+
+    def profileAction(self,mode,position):
+
+        self.popup = Tk()
+        self.popup.resizable(False, False)
+        self.popup.geometry('650x300')
+
+        self.pName = StringVar()
+        self.fName = StringVar()
+        self.lName = StringVar()
+        self.email = StringVar()
+        self.phone = StringVar()
+        self.bill1 = StringVar()
+        self.bill2 = StringVar()
+        self.city = StringVar()
+        self.state = StringVar()
+        self.zip = StringVar()
+        self.cc = StringVar()
+        self.ccExpMM = StringVar()
+        self.ccExpYYYY = StringVar()
+        self.cvv = StringVar()
+
+        
+        # New Profile
+        if mode == 0:
+            self.popup.title("New Profile")
+            
+        # Edit Profile
+        if mode == 1:
+            self.popup.title("Edit Profile")
+            profile = self.profiles['profileList'][position]
+
+            self.pName = StringVar(self.popup,value=str(profile['profileName']))
+            self.fName = StringVar(self.popup,value=str(profile['fName']))
+            self.lName = StringVar(self.popup,value=str(profile['lName']))
+            self.email = StringVar(self.popup,value=str(profile['email']))
+            self.phone = StringVar(self.popup,value=str(profile['phone']))
+            self.bill1 = StringVar(self.popup,value=str(profile['billStreet1']))
+            self.bill2 = StringVar(self.popup,value=str(profile['billStreet2']))
+            self.city = StringVar(self.popup,value=str(profile['billCity']))
+            self.state = StringVar(self.popup,value=str(profile['billState']))
+            self.zip = StringVar(self.popup,value=str(profile['billZip']))
+            self.cc = StringVar(self.popup,value=str(profile['cc']))
+            self.ccExpMM = StringVar(self.popup,value=str(profile['ccExpMM']))
+            self.ccExpYYYY = StringVar(self.popup,value=str(profile['ccExpYYYY']))
+            self.cvv = StringVar(self.popup,value=str(profile['cvv']))
+
+        # Delete Profile
+        if mode == 2:
+            profileModule(3,self.profiles['profileList'][position]['profileName'])
+            root.showProfiles()
+            return
+
+        Label(self.popup,text="Profile Name").grid(row=0,column=0,sticky='e')
+        self.lbl_profile = Entry(self.popup,textvariable=self.pName).grid(row=0,column=1)
+
+        Label(self.popup,text="First Name").grid(row=1,column=0,sticky='e')
+        Entry(self.popup,textvariable=self.fName).grid(row=1,column=1)
+        Label(self.popup,text="Last Name").grid(row=1,column=2,sticky='e')
+        Entry(self.popup,textvariable=self.lName).grid(row=1,column=3)
+
+        Label(self.popup,text="Email").grid(row=2,column=0,sticky='e')
+        Entry(self.popup,textvariable=self.email).grid(row=2,column=1)
+        Label(self.popup,text="Phone").grid(row=2,column=2,sticky='e')
+        Entry(self.popup,textvariable=self.phone).grid(row=2,column=3)
+
+        Label(self.popup,text="Billing/Shipping").grid(row=3,column=0,sticky='e')
+
+        Label(self.popup,text="Address Line 1").grid(row=4,column=0,sticky='e')
+        Entry(self.popup,textvariable=self.bill1).grid(row=4,column=1)
+
+        Label(self.popup,text="Apt/Suite (Opt)").grid(row=5,column=0,sticky='e')
+        Entry(self.popup,textvariable=self.bill2).grid(row=5,column=1)
+
+        Label(self.popup,text="City").grid(row=6,column=0,sticky='e')
+        Entry(self.popup,textvariable=self.city).grid(row=6,column=1)
+        Label(self.popup,text="State i.e. PA").grid(row=6,column=2,sticky='e')
+        Entry(self.popup,textvariable=self.state).grid(row=6,column=3)
+        Label(self.popup,text="Zipcode").grid(row=6,column=4,sticky='e')
+        Entry(self.popup,textvariable=self.zip).grid(row=6,column=5)
+
+        Label(self.popup,text="Card Info").grid(row=7,column=0,sticky='e')
+
+        Label(self.popup,text="Card Number").grid(row=8,column=0,sticky='e')
+        Entry(self.popup,textvariable=self.cc).grid(row=8,column=1)
+
+        Label(self.popup,text="Card Exp MM").grid(row=9,column=0,sticky='e')
+        Entry(self.popup,textvariable=self.ccExpMM).grid(row=9,column=1)
+        Label(self.popup,text="Card Exp YYYY").grid(row=9,column=2,sticky='e')
+        Entry(self.popup,textvariable=self.ccExpYYYY).grid(row=9,column=3)
+        Label(self.popup,text=" CVV").grid(row=9,column=4,sticky='e')
+        Entry(self.popup,textvariable=self.cvv).grid(row=9,column=5)
+
+        Button(self.popup,text='Save Profile').grid(row=10,column=5)
+
+    def getPane(self):
+        self.btn_new = Button(self.frame,text="New Profile",command= lambda: self.profileAction(0,0))
+        self.profiles = profileModule(1,{})
+
+        self.btn_new.grid(row=0,column=0)
+
+        Label(self.frame,text="Profile Name").grid(row=1,column=0)
+
+        for i in range(len(self.profiles['profileList'])):
+            Label(self.frame,text=self.profiles['profileList'][i]['profileName']).grid(row=i+2,column=0)
+            Button(self.frame,text="Edit",command= lambda: self.profileAction(1,i)).grid(row=i+2,column=1)
+            Button(self.frame,text="Delete",command= lambda: self.profileAction(2,i)).grid(row=i+2,column=2)
+        return self.frame
+
 #Settings Pane
 class SettingsPane:
     def __init__(self):
@@ -2458,22 +2572,54 @@ class SettingsPane:
         settingsModule(2,not self.settings['forceCheckout'])
     def toggleDevMode(self):
         settingsModule(3,not self.settings['headless'])
-    def toggleQueue(self):
-        settingsModule(5,self.queue.get())
+    def toggleQueue(self,*args):
+        try:
+            if self.queue.get() != 0:
+                settingsModule(5,self.queue.get())
+        except:
+            pass
+    def toggleQuickTask(self,*args):
+        if self.quickProfile.get() != "Select a profile":
+            for profile in self.profiles['profileList']:
+                if profile['profileName'] == self.quickProfile.get():
+                    settingsModule(6,profile)
 
     def getPane(self):
         self.settings = settingsModule(1, None)
         self.force = BooleanVar(value=bool(self.settings['forceCheckout']))
         self.dev = BooleanVar(value=bool(self.settings['headless']))
         self.queue = IntVar(value=int(self.settings['queueTasks']))
+        self.queue.trace("w",self.toggleQueue)
+        self.profiles = profileModule(1,{})
+        self.quickProfile = StringVar()
+        self.profileMenu = []
+
+        if self.profiles == False:
+            self.profileMenu.append("You dont have any profiles!")
+            self.quickProfile.set(self.profileMenu[0])
+        else:
+            if self.settings['qtProfile'] == "":
+                self.profileMenu.append("Select a profile")
+                self.quickProfile.set(self.profileMenu[0])
+            else:
+                self.quickProfile.set(self.settings['qtProfile']['profileName'])
+            for profile in self.profiles['profileList']:
+                self.profileMenu.append(profile['profileName'])
+            self.quickProfile.trace('w',self.toggleQuickTask)
 
         self.forceCheckout = Checkbutton(self.frame, text='Force Checkout',variable=self.force, onvalue=True, offvalue=False, command=self.toggleForceCheckout)
         self.devMode = Checkbutton(self.frame, text='Developer Mode',variable=self.dev, onvalue=True, offvalue=False, command=self.toggleDevMode)
-        self.queueTasks = Entry(self.frame, textvariable=self.queue, validate='key', validatecommand=self.toggleQueue)
+        self.lbl_queue = Label(self.frame,text="Queue Tasks")
+        self.queueTasks = Entry(self.frame, textvariable=self.queue)
+        self.lbl_quickTask = Label(self.frame,text="Quick Task Profile")
+        self.profileOption = OptionMenu(self.frame,self.quickProfile,*self.profileMenu)
 
         self.forceCheckout.grid(row=0,column=0)
         self.devMode.grid(row=1,column=0)
+        self.lbl_queue.grid(row=2,column=0,sticky='w')
         self.queueTasks.grid(row=2,column=1)
+        self.lbl_quickTask.grid(row=3,column=0,sticky='w')
+        self.profileOption.grid(row=3,column=1)
         return self.frame
 
 #Root Window
@@ -2509,8 +2655,15 @@ class RootWindow:
     def showSettings(self):
         if self.content != None:
             self.content.pack_forget()
-        self.content = SettingsPane()
-        self.content.getPane().pack(fill=BOTH,side=RIGHT)
+        self.content = SettingsPane().getPane()
+        self.content.pack(fill=BOTH)
+
+    def showProfiles(self):
+        if self.content != None:
+            self.content.pack_forget()
+        self.content = ProfilePane().getPane()
+        self.content.pack(fill=BOTH)
+
 root = RootWindow()
 
 # Main Function
