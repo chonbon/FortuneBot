@@ -674,7 +674,10 @@ def taskSaveModule(mode, task, position):
                 data = json.loads(json_file1)
         with open(filename, 'w') as json_file:
             if len(data) > 0:
-                data["taskList"].append(task)
+                if position == -1:
+                    data["taskList"].append(task)
+                else:
+                    data['taskList'][position] = task
                 json.dump(data, json_file)
                 print("Saved Task!")
                 return True
@@ -689,10 +692,7 @@ def taskSaveModule(mode, task, position):
             #print(str(json_file1))
             if len(json_file1) != 0:
                 data = json.loads(json_file1)
-            for i in range(len(data["taskList"])):
-                if data["taskList"][i]["name"] == task:
-                    data["taskList"].pop(i)
-                    break
+            data["taskList"].pop(position)
         with open(filename, 'w') as json_file:
             json.dump(data, json_file)
             print("Deleted Task!")
@@ -2464,7 +2464,59 @@ class TaskPane:
         self.stores = ['Best Buy']
 
     def taskAction(self,mode,position):
-        print("TDOD")
+        # Delete Task
+        if mode == 2:
+            print(position)
+            taskSaveModule(3,None,position)
+            root.showTasks()
+            return
+
+        # Clone Task
+        if mode == 3:
+            task = self.tasks['taskList'][position]
+            task['name']+='Clone'
+            wait = taskSaveModule(2,task,-1)
+            root.showTasks()
+            return
+
+        self.popup = Tk()
+        self.popup.resizable(False, False)
+        self.popup.geometry('650x300')
+
+        self.store = StringVar(self.popup)
+        self.name = StringVar(self.popup)
+        self.sku = StringVar(self.popup)
+        self.qt = StringVar(self.popup)
+        self.storePickup = StringVar(self.popup)
+        self.profile = StringVar(self.popup)
+        self.futureTask = StringVar(self.popup)
+        self.date = StringVar(self.popup)
+        self.time = StringVar(self.popup)
+        
+        if mode == 0:
+            self.popup.title("New Task")
+        if mode == 1:
+            self.popup.title("Edit Task")
+            task = self.tasks['taskList'][position]
+
+            if "store" not in task:
+                task['store'] = "Best Buy"
+
+            if "storePickup" not in task:
+                task['storePickup'] = False
+
+            self.store = StringVar(self.popup,value=str(task['store']))
+            self.name = StringVar(self.popup, value=str(task['name']))
+            self.sku = StringVar(self.popup, value=str(task['sku']))
+            self.qt = IntVar(self.popup, value=int(task['quantity']))
+            self.storePickup = BooleanVar(self.popup, value=bool(task['storePickup']))
+            self.profile = StringVar(self.popup, value=str(task['profile']['profileName']))
+            if task['date'] == False:
+                self.futureTask = BooleanVar(self.popup, value=False)
+            else:
+                self.futureTask = BooleanVar(self.popup, value=True)
+                self.date = StringVar(self.popup, value=str(task['date']))
+                self.time = StringVar(self.popup, value=str(task['time']))
 
     def getPane(self):
         self.tasks = taskSaveModule(1,{},None)
@@ -2487,11 +2539,11 @@ class TaskPane:
         Label(self.frame,text="Task Name").grid(row=1,column=1)
 
         for i in range(len(self.tasks['taskList'])):
-            Button(self.frame,text="Run",command= lambda: self.taskAction(1,i)).grid(row=i+2,column=0)
+            Button(self.frame,text="Run",command= lambda i=i: self.taskAction(1,i)).grid(row=i+2,column=0)
             Label(self.frame,text=self.tasks['taskList'][i]['name']).grid(row=i+2,column=1)
-            Button(self.frame,text="Edit",command= lambda: self.taskAction(1,i)).grid(row=i+2,column=2)
-            Button(self.frame,text="Clone",command= lambda: self.taskAction(3,i)).grid(row=i+2,column=3)
-            Button(self.frame,text="Delete",command= lambda: self.taskAction(2,i)).grid(row=i+2,column=4)
+            Button(self.frame,text="Edit",command= lambda i=i: self.taskAction(1,i)).grid(row=i+2,column=2)
+            Button(self.frame,text="Clone",command= lambda i=i: self.taskAction(3,i)).grid(row=i+2,column=3)
+            Button(self.frame,text="Delete",command= lambda i=i: self.taskAction(2,i)).grid(row=i+2,column=4)
         return self.frame
 
 #Profiles Pane
@@ -2580,6 +2632,7 @@ class ProfilePane:
 
         # Delete Profile
         if mode == 2:
+            print(position)
             profileModule(3,self.profiles['profileList'][position]['profileName'],None)
             root.showProfiles()
             return
@@ -2686,9 +2739,9 @@ class ProfilePane:
 
         for i in range(len(self.profiles['profileList'])):
             Label(self.frame,text=self.profiles['profileList'][i]['profileName']).grid(row=i+2,column=0)
-            Button(self.frame,text="Edit",command= lambda: self.profileAction(1,i)).grid(row=i+2,column=1)
-            Button(self.frame,text="Clone",command= lambda: self.profileAction(3,i)).grid(row=i+2,column=2)
-            Button(self.frame,text="Delete",command= lambda: self.profileAction(2,i)).grid(row=i+2,column=3)
+            Button(self.frame,text="Edit",command= lambda i=i: self.profileAction(1,i)).grid(row=i+2,column=1)
+            Button(self.frame,text="Clone",command= lambda i=i: self.profileAction(3,i)).grid(row=i+2,column=2)
+            Button(self.frame,text="Delete",command= lambda i=i: self.profileAction(2,i)).grid(row=i+2,column=3)
         return self.frame
 
 #Settings Pane
