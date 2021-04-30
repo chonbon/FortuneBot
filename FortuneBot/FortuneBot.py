@@ -2711,6 +2711,8 @@ class SettingsPane:
             for profile in self.profiles['profileList']:
                 if profile['profileName'] == self.quickProfile.get():
                     settingsModule(6,profile)
+    def saveWebhook(self):
+        return
 
     def getPane(self):
         self.settings = settingsModule(1, None)
@@ -2721,6 +2723,8 @@ class SettingsPane:
         self.profiles = profileModule(1,{},None)
         self.quickProfile = StringVar()
         self.profileMenu = []
+        self.webhook = StringVar(self.frame)
+        self.webhooks = webhookModule({},"",2)
 
         if self.profiles == False:
             self.profileMenu.append("You dont have any profiles!")
@@ -2742,12 +2746,23 @@ class SettingsPane:
         self.lbl_quickTask = Label(self.frame,text="Quick Task Profile")
         self.profileOption = OptionMenu(self.frame,self.quickProfile,*self.profileMenu)
 
+        self.ent_webhook = Entry(self.frame, textvariable=self.webhook)
+        self.btn_webhook = Button(self.frame, text="Add Webhook",command=self.saveWebhook)
+
         self.forceCheckout.grid(row=0,column=0)
         self.devMode.grid(row=1,column=0)
         self.lbl_queue.grid(row=2,column=0,sticky='w')
         self.queueTasks.grid(row=2,column=1)
         self.lbl_quickTask.grid(row=3,column=0,sticky='w')
         self.profileOption.grid(row=3,column=1)
+        Label(self.frame,text="Webhooks").grid(row=4,column=0)
+        self.ent_webhook.grid(row=5,column=0)
+        self.btn_webhook.grid(row=5,column=1)
+
+        for i in range(len(self.webhooks["urls"])):
+            Label(self.frame,text=self.webhooks['urls'][i],wraplength=120,justify=LEFT).grid(row=6+i,column=0)
+            Button(self.frame,text="Delete").grid(row=6+i,column=1)
+
         return self.frame
 
 #Root Window
