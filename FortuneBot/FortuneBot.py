@@ -84,7 +84,7 @@ click.echo = echo
 click.secho = secho
 
 # Profile Module
-def profileModule(mode,profile):
+def profileModule(mode,profile,position):
     #load profiles mode =1, save a new profile mode =2, delete profile is mode =3
     if mode == 1:
         try:
@@ -107,7 +107,10 @@ def profileModule(mode,profile):
                 data = json.loads(json_file1)
         with open(filename1, 'w') as json_file:
             if len(data) > 0:
-                data["profileList"].append(profile)
+                if position == -1:
+                    data["profileList"].append(profile)
+                else:
+                    data['profileList'][position] = profile
                 json.dump(data, json_file)
                 print("Saved Profile!")
                 return True
@@ -648,7 +651,7 @@ def taskStatus(status, id):
     return
 
 # Saves Tasks to the file
-def taskSaveModule(mode, task):
+def taskSaveModule(mode, task, position):
     #load tasks mode =1, save a new task mode =2, delete task is mode =3
     if mode == 1:
         try:
@@ -2436,7 +2439,7 @@ class MenuPane:
         self.lbl_version = Label(self.frame,text=botVersion,fg="#F06543",bg="#141425")
 
         self.btn_search = Button(self.frame,text="Search (Developer)",width=50,height=3)
-        self.btn_tasks = Button(self.frame,text="Tasks",width=50,height=3)
+        self.btn_tasks = Button(self.frame,text="Tasks",width=50,height=3,command=root.showTasks)
         self.btn_profiles = Button(self.frame,text="Profiles",width=50,height=3,command=root.showProfiles)
         self.btn_settings = Button(self.frame,text="Settings",width=50,height=3,command=root.showSettings)
 
@@ -2449,34 +2452,164 @@ class MenuPane:
 
         self.lbl_version.grid(row=7,column=0)
 
+#Tasks Pane
+class TaskPane:
+
+    def taskStatusThread(self):
+        print("TODO")
+
+    def __init__(self):
+        self.frame = Frame(width=1070,height=720)
+        self.statusThread = Thread(target=self.taskStatusThread)
+        self.stores = ['Best Buy']
+
+    def taskAction(self,mode,position):
+        print("TDOD")
+
+    def getPane(self):
+        self.tasks = taskSaveModule(1,{},None)
+        self.qtSku = StringVar(self.frame)
+
+        self.btn_new = Button(self.frame,text="New Task",command= lambda: self.taskAction(0,-1))
+        self.btn_new.grid(row=0,column=0)
+
+        Label(self.frame,text=("Quick Task Sku:")).grid(row=0,column=1)
+        Entry(self.frame,textvariable=self.qtSku).grid(row=0,column=2)
+        self.btn_qt = Button(self.frame,text=("Run Quick Task"))
+
+        self.settings = settingsModule(1, None)
+
+        if self.settings['qtProfile'] == "":
+            self.btn_qt['state'] = "disabled"
+            self.btn_qt['text'] = "Need to set quick task profile in settings!"
+
+        self.btn_qt.grid(row=0,column=3)
+        Label(self.frame,text="Task Name").grid(row=1,column=1)
+
+        for i in range(len(self.tasks['taskList'])):
+            Button(self.frame,text="Run",command= lambda: self.taskAction(1,i)).grid(row=i+2,column=0)
+            Label(self.frame,text=self.tasks['taskList'][i]['name']).grid(row=i+2,column=1)
+            Button(self.frame,text="Edit",command= lambda: self.taskAction(1,i)).grid(row=i+2,column=2)
+            Button(self.frame,text="Clone",command= lambda: self.taskAction(3,i)).grid(row=i+2,column=3)
+            Button(self.frame,text="Delete",command= lambda: self.taskAction(2,i)).grid(row=i+2,column=4)
+        return self.frame
+
 #Profiles Pane
 class ProfilePane:
     global root
     def __init__(self):
         self.frame = Frame(width=1070,height=720)
 
+    def saveProfile(self,position):
+        profile = {}
+
+        if self.pName.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['profileName'] = self.pName.get()
+
+        if self.fName.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['fName'] = self.fName.get()
+
+        if self.lName.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['lName'] = self.lName.get()
+
+        if self.email.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['email'] = self.email.get()
+
+        if self.phone.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['phone'] = self.phone.get()
+
+        if self.bill1.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['billStreet1'] = self.bill1.get()
+
+        profile['billStreet2'] = self.bill2.get()
+
+        if self.city.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['billCity'] = self.city.get()
+
+        if self.state.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['billState'] = self.state.get()
+
+        if self.zip.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['billZip'] = self.zip.get()
+
+        if self.cc.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['cc'] = self.cc.get()
+
+        if self.ccExpMM.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['ccExpMM'] = self.ccExpMM.get()
+
+        if self.ccExpYYYY.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['ccExpYYYY'] = self.ccExpYYYY.get()
+
+        if self.cvv.get() == "":
+            print("Field Cant be empty")
+            return
+        profile['cvv'] = self.cvv.get()
+
+        wait = profileModule(2,profile,position)
+
+        self.popup.destroy()
+
+        root.showProfiles()
+
     def profileAction(self,mode,position):
 
+        # Delete Profile
+        if mode == 2:
+            profileModule(3,self.profiles['profileList'][position]['profileName'],None)
+            root.showProfiles()
+            return
+
+        # Clone Profile
+        if mode == 3:
+            profile = self.profiles['profileList'][position]
+            profile['profileName']+='Clone'
+            wait = profileModule(2,profile,-1)
+            root.showProfiles()
+            return
         self.popup = Tk()
         self.popup.resizable(False, False)
         self.popup.geometry('650x300')
 
-        self.pName = StringVar()
-        self.fName = StringVar()
-        self.lName = StringVar()
-        self.email = StringVar()
-        self.phone = StringVar()
-        self.bill1 = StringVar()
-        self.bill2 = StringVar()
-        self.city = StringVar()
-        self.state = StringVar()
-        self.zip = StringVar()
-        self.cc = StringVar()
-        self.ccExpMM = StringVar()
-        self.ccExpYYYY = StringVar()
-        self.cvv = StringVar()
+        self.pName = StringVar(self.popup)
+        self.fName = StringVar(self.popup)
+        self.lName = StringVar(self.popup)
+        self.email = StringVar(self.popup)
+        self.phone = StringVar(self.popup)
+        self.bill1 = StringVar(self.popup)
+        self.bill2 = StringVar(self.popup)
+        self.city = StringVar(self.popup)
+        self.state = StringVar(self.popup)
+        self.zip = StringVar(self.popup)
+        self.cc = StringVar(self.popup)
+        self.ccExpMM = StringVar(self.popup)
+        self.ccExpYYYY = StringVar(self.popup)
+        self.cvv = StringVar(self.popup)
 
-        
         # New Profile
         if mode == 0:
             self.popup.title("New Profile")
@@ -2500,12 +2633,6 @@ class ProfilePane:
             self.ccExpMM = StringVar(self.popup,value=str(profile['ccExpMM']))
             self.ccExpYYYY = StringVar(self.popup,value=str(profile['ccExpYYYY']))
             self.cvv = StringVar(self.popup,value=str(profile['cvv']))
-
-        # Delete Profile
-        if mode == 2:
-            profileModule(3,self.profiles['profileList'][position]['profileName'])
-            root.showProfiles()
-            return
 
         Label(self.popup,text="Profile Name").grid(row=0,column=0,sticky='e')
         self.lbl_profile = Entry(self.popup,textvariable=self.pName).grid(row=0,column=1)
@@ -2547,11 +2674,11 @@ class ProfilePane:
         Label(self.popup,text=" CVV").grid(row=9,column=4,sticky='e')
         Entry(self.popup,textvariable=self.cvv).grid(row=9,column=5)
 
-        Button(self.popup,text='Save Profile').grid(row=10,column=5)
+        Button(self.popup,text='Save Profile',command= lambda: self.saveProfile(position)).grid(row=10,column=5)
 
     def getPane(self):
-        self.btn_new = Button(self.frame,text="New Profile",command= lambda: self.profileAction(0,0))
-        self.profiles = profileModule(1,{})
+        self.btn_new = Button(self.frame,text="New Profile",command= lambda: self.profileAction(0,-1))
+        self.profiles = profileModule(1,{},None)
 
         self.btn_new.grid(row=0,column=0)
 
@@ -2560,7 +2687,8 @@ class ProfilePane:
         for i in range(len(self.profiles['profileList'])):
             Label(self.frame,text=self.profiles['profileList'][i]['profileName']).grid(row=i+2,column=0)
             Button(self.frame,text="Edit",command= lambda: self.profileAction(1,i)).grid(row=i+2,column=1)
-            Button(self.frame,text="Delete",command= lambda: self.profileAction(2,i)).grid(row=i+2,column=2)
+            Button(self.frame,text="Clone",command= lambda: self.profileAction(3,i)).grid(row=i+2,column=2)
+            Button(self.frame,text="Delete",command= lambda: self.profileAction(2,i)).grid(row=i+2,column=3)
         return self.frame
 
 #Settings Pane
@@ -2590,7 +2718,7 @@ class SettingsPane:
         self.dev = BooleanVar(value=bool(self.settings['headless']))
         self.queue = IntVar(value=int(self.settings['queueTasks']))
         self.queue.trace("w",self.toggleQueue)
-        self.profiles = profileModule(1,{})
+        self.profiles = profileModule(1,{},None)
         self.quickProfile = StringVar()
         self.profileMenu = []
 
@@ -2652,10 +2780,10 @@ class RootWindow:
         self.content = Frame(width=1070,height=720)
         self.content.pack(fill=BOTH,side=RIGHT)
 
-    def showSettings(self):
+    def showTasks(self):
         if self.content != None:
             self.content.pack_forget()
-        self.content = SettingsPane().getPane()
+        self.content = TaskPane().getPane()
         self.content.pack(fill=BOTH)
 
     def showProfiles(self):
@@ -2664,6 +2792,11 @@ class RootWindow:
         self.content = ProfilePane().getPane()
         self.content.pack(fill=BOTH)
 
+    def showSettings(self):
+        if self.content != None:
+            self.content.pack_forget()
+        self.content = SettingsPane().getPane()
+        self.content.pack(fill=BOTH)
 root = RootWindow()
 
 # Main Function
