@@ -2063,8 +2063,10 @@ def app():
         url = "https://discord.com/api/oauth2/authorize?client_id=829097899501420605&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify"
         
         #p1 = subprocess.Popen("start chrome /new-tab {}".format(url.replace("&","^&")),shell=True)
-        os.startfile(url)
-
+        if sys.platform == 'win32':
+            os.startfile(url)
+        else:
+            os.system(url)
         serverRun()
     
     time.sleep(2)
