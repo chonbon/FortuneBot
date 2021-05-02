@@ -389,7 +389,7 @@ def webhookModule(hitInfo, webhook, mode):
             #print(str(json_file1))
             if len(json_file1) != 0:
                 data = json.loads(json_file1)
-                data["urls"].pop(int(webhook)-1)
+                data["urls"].pop(int(webhook))
         with open(filename2, 'w') as json_file:
             json.dump(data, json_file)
             print("Deleted Webhook!")
@@ -2483,10 +2483,10 @@ class TaskPane:
         self.popup.resizable(False, False)
         self.popup.geometry('650x300')
 
-        self.store = StringVar(self.popup)
+        self.store = StringVar(self.popup,value="Best Buy")
         self.name = StringVar(self.popup)
         self.sku = StringVar(self.popup)
-        self.qt = StringVar(self.popup)
+        self.qt = IntVar(self.popup,value=1)
         self.storePickup = StringVar(self.popup)
         self.profile = StringVar(self.popup)
         self.futureTask = StringVar(self.popup)
@@ -2517,6 +2517,22 @@ class TaskPane:
                 self.futureTask = BooleanVar(self.popup, value=True)
                 self.date = StringVar(self.popup, value=str(task['date']))
                 self.time = StringVar(self.popup, value=str(task['time']))
+
+        Label(self.popup,text="Task Name").grid(row=0,column=0)
+        Entry(self.popup,textvariable=self.name).grid(row=0,column=1)
+
+        Label(self.popup,text="Store").grid(row=0,column=2)
+        OptionMenu(self.popup,self.store,*self.stores).grid(row=0,column=3)
+
+        Label(self.popup,text="Sku").grid(row=1,column=0)
+        Entry(self.popup,textvariable=self.sku).grid(row=1,column=1)
+
+        Label(self.popup,text="Quantity").grid(row=1,column=2)
+        Spinbox(self.popup,textvariable=self.qt,from_=1,to=99).grid(row=1,column=3)
+
+        Checkbutton(self.popup,text="Store Pickup",variable=self.storePickup,onvalue=True,offvalue=False).grid(row=2,column=0)
+
+
 
     def getPane(self):
         self.tasks = taskSaveModule(1,{},None)
@@ -2765,6 +2781,14 @@ class SettingsPane:
                 if profile['profileName'] == self.quickProfile.get():
                     settingsModule(6,profile)
     def saveWebhook(self):
+        if self.webhook.get() == "":
+            return
+        webhookModule({},self.webhook.get(),3)
+        root.showSettings()
+        return
+    def deleteWebhook(self,position):
+        webhookModule({},position,4)
+        root.showSettings()
         return
 
     def getPane(self):
@@ -2814,7 +2838,7 @@ class SettingsPane:
 
         for i in range(len(self.webhooks["urls"])):
             Label(self.frame,text=self.webhooks['urls'][i],wraplength=120,justify=LEFT).grid(row=6+i,column=0)
-            Button(self.frame,text="Delete").grid(row=6+i,column=1)
+            Button(self.frame,text="Delete",command=lambda i=i: self.deleteWebhook(i)).grid(row=6+i,column=1)
 
         return self.frame
 
