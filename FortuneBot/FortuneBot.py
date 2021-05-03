@@ -2425,7 +2425,7 @@ def center(toplevel):
 
     toplevel.geometry("+%d+%d" % (x, y))
 
-#Splash Pane
+# Splash Pane
 class SplashPane:
     global root
     def __init__(self):
@@ -2451,7 +2451,7 @@ class SplashPane:
         self.var.set(status)
         root.roots.update()
 
-#Menu Pane
+# enu Pane
 class MenuPane:
     global root
     def __init__(self):
@@ -2474,7 +2474,7 @@ class MenuPane:
 
         self.lbl_version.grid(row=7,column=0)
 
-#Tasks Pane
+# Tasks Pane
 class TaskPane:
 
     def taskStatusThread(self):
@@ -2643,6 +2643,8 @@ class TaskPane:
 
         Button(self.popup,text='Save Task',command= lambda: self.saveTask(position)).grid(row=10,column=1)
 
+    def runTask(self,task):
+        print("TODO")
     def getPane(self):
         self.tasks = taskSaveModule(1,{},None)
         self.qtSku = StringVar(self.frame)
@@ -2671,7 +2673,7 @@ class TaskPane:
             Button(self.frame,text="Delete",command= lambda i=i: self.taskAction(2,i)).grid(row=i+2,column=4)
         return self.frame
 
-#Profiles Pane
+# Profiles Pane
 class ProfilePane:
     global root
     def __init__(self):
@@ -2870,7 +2872,7 @@ class ProfilePane:
             Button(self.frame,text="Delete",command= lambda i=i: self.profileAction(2,i)).grid(row=i+2,column=3)
         return self.frame
 
-#Settings Pane
+# Settings Pane
 class SettingsPane:
     def __init__(self):
         self.frame = Frame(width=1070,height=720)
@@ -2952,7 +2954,7 @@ class SettingsPane:
 
         return self.frame
 
-#Root Window
+# Root Window
 class RootWindow:
 
     def __init__(self):
@@ -3001,6 +3003,7 @@ class RootWindow:
             self.content.pack_forget()
         self.content = SettingsPane().getPane()
         self.content.pack(fill=BOTH)
+
 root = RootWindow()
 
 # Main Function
