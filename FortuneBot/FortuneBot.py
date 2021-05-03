@@ -22,6 +22,7 @@ from threading import Thread
 from tkinter import *
 from PIL import ImageTk, Image
 import tkinter.font as font
+from PyQt5 import QtWidgets 
 import logging,requests,json,time,os,stat,sys,multiprocessing,random,subprocess,tempfile,jwt,click,re
 
 botVersion = "v0.2"
@@ -698,7 +699,7 @@ def taskSaveModule(mode, task, position):
             print("Deleted Task!")
             return True
 
-#Best Buy Search Module
+# Best Buy Search Module
 def bbSearchModule(sku,proxy):
     startTime = time.time()
     #print("Searching for " + str(sku))
@@ -1412,7 +1413,7 @@ def bbCartModule(sku,billing,id):
             return True
     return True
 
-#Newegg Search Module
+# Newegg Search Module
 def neweggSearchModule(model,proxy):
     startTime = time.time()
     #print("Searching for " + str(sku))
@@ -1965,7 +1966,7 @@ def callbackFlow(code,func):
                 print("No Keys binded!")
     return
 
-#temp server to capture callback
+# temp server to capture callback
 def serverRun():
     HOST = os.environ.get('SERVER_HOST', 'localhost')
     try:
@@ -1974,7 +1975,7 @@ def serverRun():
        PORT = 8080
     tempServer.run(HOST, PORT)
 
-#callback route
+# callback route
 @tempServer.route('/')
 def callback():
     code = request.args.get('code')
@@ -1984,7 +1985,7 @@ def callback():
     callbackFlow(code, func)
     return ""
 
-#INIT
+# INIT
 def appInit():
 
     if not os.path.exists(folder):
@@ -2405,6 +2406,25 @@ def stopAppThread():
 #
 #############
 
+# Center window
+def center(toplevel):
+    toplevel.update_idletasks()
+
+    # Tkinter way to find the screen resolution
+    # screen_width = toplevel.winfo_screenwidth()
+    # screen_height = toplevel.winfo_screenheight()
+
+    # PyQt way to find the screen resolution
+    app = QtWidgets.QApplication([])
+    screen_width = app.desktop().screenGeometry().width()
+    screen_height = app.desktop().screenGeometry().height()
+
+    size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
+    x = screen_width/2 - size[0]/2
+    y = screen_height/2 - size[1]/2
+
+    toplevel.geometry("+%d+%d" % (x, y))
+
 #Splash Pane
 class SplashPane:
     global root
@@ -2465,6 +2485,70 @@ class TaskPane:
         self.statusThread = Thread(target=self.taskStatusThread)
         self.stores = ['Best Buy']
 
+    def saveTask(self,position):
+        task = {}
+
+        if position == -2:
+            if self.qtSku.get() == "":
+                return
+            sku = self.qtSku.get()
+            settings = settingsModule(1,None)
+
+            task = {
+                    'name': 'QuickTask'+sku,
+                    'store': 'Best Buy',
+                    'sku':sku,
+                    'quantity':1,
+                    'storePickup':False,
+                    'profile':settings['qtProfile'],
+                    'date':False,
+                    'time':False
+                    }
+            wait = taskSaveModule(2,task,-1)
+            root.showTasks()
+            return
+
+        if self.store.get() == '':
+            return
+        task['store'] = self.store.get()
+
+        if self.name.get() == '':
+            return
+        task['name'] = self.name.get()
+
+        if self.sku.get() == '':
+            return
+        task['sku'] = self.sku.get()
+
+        if self.qt.get() == '':
+            return
+        task['quantity'] = self.qt.get()
+
+        if self.storePickup.get() == '':
+            return
+        task['storePickup'] = self.storePickup.get()
+
+        if self.profile.get() == '':
+            return
+        task['profile'] = self.profile.get()
+
+        if self.futureTask.get() == True:
+            if self.date.get() == '':
+                return
+            task['date'] = self.date.get()
+
+            if self.time.get() == '':
+                return
+            task['time'] = self.time.get()
+        else:
+            task['date'] = False
+            task['time'] = False
+
+        wait = taskSaveModule(2,task,position)
+
+        self.popup.destroy()
+        root.showTasks()
+
     def taskAction(self,mode,position):
         # Delete Task
         if mode == 2:
@@ -2483,18 +2567,31 @@ class TaskPane:
 
         self.popup = Tk()
         self.popup.resizable(False, False)
-        self.popup.geometry('650x300')
+        self.popup.geometry('300x300')
+        center(self.popup)
 
         self.store = StringVar(self.popup,value="Best Buy")
         self.name = StringVar(self.popup)
         self.sku = StringVar(self.popup)
         self.qt = IntVar(self.popup,value=1)
-        self.storePickup = StringVar(self.popup)
+        self.storePickup = BooleanVar(self.popup,value=False)
         self.profile = StringVar(self.popup)
-        self.futureTask = StringVar(self.popup)
+        self.futureTask = BooleanVar(self.popup,value=False)
         self.date = StringVar(self.popup)
         self.time = StringVar(self.popup)
+
+        self.profiles = profileModule(1,{},None)
+        self.profileMenu = []
         
+        if self.profiles == False:
+            self.profileMenu.append("You dont have any profiles!")
+            self.profile.set(self.profileMenu[0])
+        else:
+            self.profileMenu.append("Select a profile")
+            self.profile.set(self.profileMenu[0])
+            for profile in self.profiles['profileList']:
+                self.profileMenu.append(profile['profileName'])
+
         if mode == 0:
             self.popup.title("New Task")
         if mode == 1:
@@ -2523,18 +2620,28 @@ class TaskPane:
         Label(self.popup,text="Task Name").grid(row=0,column=0)
         Entry(self.popup,textvariable=self.name).grid(row=0,column=1)
 
-        Label(self.popup,text="Store").grid(row=0,column=2)
-        OptionMenu(self.popup,self.store,*self.stores).grid(row=0,column=3)
+        Label(self.popup,text="Store").grid(row=1,column=0)
+        OptionMenu(self.popup,self.store,*self.stores).grid(row=1,column=1)
 
-        Label(self.popup,text="Sku").grid(row=1,column=0)
-        Entry(self.popup,textvariable=self.sku).grid(row=1,column=1)
+        Label(self.popup,text="Sku").grid(row=2,column=0)
+        Entry(self.popup,textvariable=self.sku).grid(row=2,column=1)
 
-        Label(self.popup,text="Quantity").grid(row=1,column=2)
-        Spinbox(self.popup,textvariable=self.qt,from_=1,to=99).grid(row=1,column=3)
+        Label(self.popup,text="Quantity").grid(row=3,column=0)
+        Spinbox(self.popup,textvariable=self.qt,from_=1,to=99).grid(row=3,column=1)
 
-        Checkbutton(self.popup,text="Store Pickup",variable=self.storePickup,onvalue=True,offvalue=False).grid(row=2,column=0)
+        Checkbutton(self.popup,text="Store Pickup?",variable=self.storePickup,onvalue=True,offvalue=False).grid(row=4,column=0)
 
+        Label(self.popup,text="Profile").grid(row=5,column=0)
+        OptionMenu(self.popup,self.profile,*self.profileMenu).grid(row=5,column=1)
 
+        Checkbutton(self.popup,text='Future Task?',variable=self.futureTask,onvalue=True,offvalue=False).grid(row=6,column=0)
+
+        Label(self.popup,text="Date MM/DD/YYYY").grid(row=7,column=0)
+        Entry(self.popup,textvariable=self.date).grid(row=7,column=1)
+        Label(self.popup,text="Time HH:MM AM/PM").grid(row=8,column=0)
+        Entry(self.popup,textvariable=self.time).grid(row=8,column=1)
+
+        Button(self.popup,text='Save Task',command= lambda: self.saveTask(position)).grid(row=10,column=1)
 
     def getPane(self):
         self.tasks = taskSaveModule(1,{},None)
@@ -2545,7 +2652,7 @@ class TaskPane:
 
         Label(self.frame,text=("Quick Task Sku:")).grid(row=0,column=1)
         Entry(self.frame,textvariable=self.qtSku).grid(row=0,column=2)
-        self.btn_qt = Button(self.frame,text=("Run Quick Task"))
+        self.btn_qt = Button(self.frame,text=("Run Quick Task"),command= lambda: self.saveTask(-2))
 
         self.settings = settingsModule(1, None)
 
@@ -2557,7 +2664,7 @@ class TaskPane:
         Label(self.frame,text="Task Name").grid(row=1,column=1)
 
         for i in range(len(self.tasks['taskList'])):
-            Button(self.frame,text="Run",command= lambda i=i: self.taskAction(1,i)).grid(row=i+2,column=0)
+            Button(self.frame,text="Run",command= lambda i=i: self.taskAction(0,i)).grid(row=i+2,column=0)
             Label(self.frame,text=self.tasks['taskList'][i]['name']).grid(row=i+2,column=1)
             Button(self.frame,text="Edit",command= lambda i=i: self.taskAction(1,i)).grid(row=i+2,column=2)
             Button(self.frame,text="Clone",command= lambda i=i: self.taskAction(3,i)).grid(row=i+2,column=3)
@@ -2665,6 +2772,7 @@ class ProfilePane:
         self.popup = Tk()
         self.popup.resizable(False, False)
         self.popup.geometry('650x300')
+        center(self.popup)
 
         self.pName = StringVar(self.popup)
         self.fName = StringVar(self.popup)
@@ -2857,6 +2965,8 @@ class RootWindow:
         self.roots.resizable(False, False)
         self.roots.title("FortuneBot")
         self.roots.geometry('1280x720')
+
+        center(self.roots)
 
         self.roots.after(1000, appThread)
 
