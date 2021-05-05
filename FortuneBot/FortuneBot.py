@@ -529,84 +529,84 @@ def taskMod(task):
                     #task is today check for time
                     taskTime = datetime.strptime(task['time'], "%I:%M%p")
                     if taskTime.time() < now.time():
-                        print(task['name']+"               running...",end='\r')
+                        taskStatus("Running...",0)
                         result = bbSearchModule(task,None)
                         if result == True:
-                            print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
+                            taskStatus("Item In Stock, attempting to checkout",0)
                             cart = bbCartModule(task['sku'],task,0)
                         if cart == True:
-                            print(task['name']+"               Success!",end='\r')
+                            taskStatus("Successful Cart!",0)
                             running = False
                             break
                         if cart == False:
-                            print(task['name']+"               Error Carting",end='\r')
+                            taskStatus("Error Carting",0)
                         if cart == None:
                             break
 
                         if settings['forceCheckout'] == True:
-                            print(task['name']+"               Forcing Cart and Checkout",end='\r')
+                            taskStatus("Forcing Cart and Checkout",0)
                             cart = bbCartModule(task['sku'],task,0)
                             if cart == True:
-                                print(task['name']+"               Success!",end='\r')
+                                taskStatus("Successful Cart!",0)
                                 running = False
                                 break
                             if cart == False:
-                                print(task['name']+"               Force Carting did not work, trying again.",end='\r')
+                                taskStatus("Force Carting did not work, trying again.",0)
                             if cart == None:
                                 break
                         continue
-                    print(task['name']+"               Not Running...",end='\r')
+                    taskStatus("Not Running...",0)
                     continue
-                    print(task['name']+"               Running Restock!",end='\r')
+                    taskStatus("Running Restock...",0)
                     result = bbSearchModule(task,None)
                     if result == True:
-                        print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
+                        taskStatus("Item In Stock, Attemping to checkout",0)
                         cart = bbCartModule(task['sku'],task,0)
                         if cart == True:
-                            print(task['name']+"               Success!",end='\r')
+                            taskStatus("Succesful Cart!",0)
                             running = False
                             break
                         if cart == False:
-                            print(task['name']+"               Error Carting",end='\r')
+                            taskStatus("",0)
                         if cart == None:
                             break
                     if settings['forceCheckout'] == True:
-                            print(task['name']+"               Forcing Cart and Checkout",end='\r')
+                            taskStatus("Forcing Cart and Checkout!",0)
                             cart = bbCartModule(task['sku'],task,0)
                             if cart == True:
-                                print(task['name']+"               Success!",end='\r')
+                                taskStatus("Succesful Cart!",0)
                                 running = False
                                 break
                             if cart == False:
-                                print(task['name']+"               Force Carting did not work, trying again.",end='\r')
+                                taskStatus("Force Carting did not work, trying again.",0)
                             if cart == None:
                                 break
                     time.sleep(1)
                     continue
-                    #task was in the past, dont check for time and run    
-                print(task['name']+"               Not Running today...",end='\r')
-            print(task['name']+"               running...",end='\r')
+                    #task was in the past, dont check for time and run
+                taskStatus("Not Running Today...",0)    
+            taskStatus("Running...",0)
             result = bbSearchModule(task,None)
             if result == True:
-                print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
+                taskStatus("Item In Stock, attempting to checkout",0)
                 cart = bbCartModule(task['sku'],task,0)
                 if cart == True:
-                    print(task['name']+"               Success!",end='\r')
+                    taskStatus("Successful Cart!",0)
                     running = False
                     break
                 if cart == False:
-                    print(task['name']+"               Error Carting",end='\r')
+                    taskStatus("Error Carting",0)
                 if cart == None:
                     break
                 if settings['forceCheckout'] == True:
-                    print(task['name']+"               Forcing Cart and Checkout",end='\r')
+                    taskStatus("Forcing Cart and Checkout",0)
                     cart = bbCartModule(task['sku'],task,0)
                     if cart == True:
-                        print(task['name']+"               Success!",end='\r')
+                        taskStatus("Succesful Cart!",0)
                         running = False
                         break
                     if cart == False:
-                        print(task['name']+"               Force Carting did not work, trying again.",end='\r')
+                        taskStatus("Force Carting did not work, trying again.",0)
                     if cart == None:
                         break
             time.sleep(1)
@@ -652,17 +652,22 @@ def taskStatus(status, id):
 
 # returns statuslist from a task
 def getTaskStatus(task):
-    tempFilename = ".\\User Data\\Temp\\"+task["name"]+"Status.json"
+    if sys.platform == 'win32':
+        tempFilename = ".\\User Data\\Temp\\"+task["name"]+"Status.json"
+    else:
+        tempFilename = "./User Data/Temp/"+task["name"]+"Status.json"
     
     data = {}
-
-    with open(tempFilename, 'r') as json_file:
-        json_file = json_file.read()
-        if len(json_file) != 0:
-            data = json.loads(json_file)
-            return data
-        else:
-            return False
+    try:
+        with open(tempFilename, 'r') as json_file:
+            json_file = json_file.read()
+            if len(json_file) != 0:
+                data = json.loads(json_file)
+                return data
+            else:
+                return False
+    except FileNotFoundError:
+        return False
 
 # Saves Tasks to the file
 def taskSaveModule(mode, task, position):
@@ -851,7 +856,7 @@ def bbCartModule(sku,billing,id):
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
     if id != 0:
-        st = taskStatus(billing['name']+"              Queue Task "+str(id)+" starting...",id)
+        st = taskStatus("Queue Task "+str(id)+" starting...",id)
 
     driver.get("https://bestbuy.com/")
 
@@ -859,7 +864,7 @@ def bbCartModule(sku,billing,id):
 
     if id == 0:
         # Add To cart link
-        st = taskStatus(billing['name']+"              Adding to Cart!",id)
+        st = taskStatus("Adding to Cart!",id)
         driver.get("https://api.bestbuy.com/click/-/"+str(sku)+"/cart")
 
     while running:
@@ -869,7 +874,7 @@ def bbCartModule(sku,billing,id):
         except TimeoutException:
             # Might be Queue
             if id == 0:
-                st = taskStatus(billing['name']+"             Unable To Cart link, trying for queue",id)
+                st = taskStatus("Unable To Cart link, trying for queue",id)
                 
             baseUrl = "https://www.bestbuy.com/site/searchpage.jsp?st="+str(sku)+"&_dyncharset=UTF-8&_dynSessConf=&id=pcat17071&type=page&sc=Global&cp=1&nrp=&sp=&qp=&list=n&af=true&iht=y&usc=All+Categories&ks=960&keys=keys"
             driver.get(baseUrl)
@@ -882,47 +887,47 @@ def bbCartModule(sku,billing,id):
                     link = productLink.get_attribute("href")
                     driver.get(link)
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Error Occured",id)
+                    st = taskStatus("Error Occured",id)
                     return False
 
             try:
                 addToCartButton = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-primary btn-lg btn-block btn-leading-ficon add-to-cart-button']")))
             except TimeoutException:
-                st = taskStatus(billing['name']+"             Check Stores, OOS or In store only.",id)
+                st = taskStatus("Check Stores, OOS or In store only.",id)
                 return False
-            st = taskStatus(billing['name']+"             Trying to enter queue",id)
+            st = taskStatus("Trying to enter queue",id)
             ActionChains(driver).click(addToCartButton).perform()
 
             # check for queue error
             try:
                 qAlert = WebDriverWait(driver, 7).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='c-alert-content']")))
             except TimeoutException:
-                st = taskStatus(billing['name']+"             Entering Queue took too long, wait to try again or use fresh proxies.",id)
+                st = taskStatus("Entering Queue took too long, wait to try again or use fresh proxies.",id)
                 return False
 
             if id == 0:
                 if settings["queueTasks"] > 1 and launchedQueueTasks != True:
-                    st = taskStatus(billing['name']+"             Handing off task to queue tasks",id)
+                    st = taskStatus("Handing off task to queue tasks",id)
                     for i in range(int(settings['queueTasks'])-1):
                         p = multiprocessing.Process(target=bbCartModule, args=[sku,billing,i+1])
                         p.start()
                         time.sleep(.75)
                     launchedQueueTasks = True
             inQueue = True
-            st = taskStatus(billing['name']+"             In Queue....",id)
+            st = taskStatus("In Queue....",id)
 
             while inQueue:
                 color = addToCartButton.value_of_css_property("background-color")
                 #print(str(color))
                 if str(color) != "rgba(197, 203, 213, 1)":
-                    st = taskStatus(billing['name']+"             Your Turn in the queue!",id)
+                    st = taskStatus("Your Turn in the queue!",id)
                     inQueue = False
                     
             time.sleep(1)
             carting = True
 
             while carting:
-                st = taskStatus(billing['name']+"            Trying to cart!",id)
+                st = taskStatus("Trying to cart!",id)
                 ActionChains(driver).click(addToCartButton).perform()
 
                 try:
@@ -930,73 +935,73 @@ def bbCartModule(sku,billing,id):
                     if cartButton.text != "0":
                         carting = False
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Did not cart, trying again",id)
+                    st = taskStatus("Did not cart, trying again",id)
                 time.sleep(random.choice([1,1.5,2]))
 
             driver.get("https://www.bestbuy.com/cart")
             try:
                 checkoutButton = WebDriverWait(driver, 7).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-lg btn-block btn-primary']")))
             except TimeoutException:
-                st = taskStatus(billing['name']+"             Error, Couldnt cart after queue",id)
+                st = taskStatus("Error, Couldnt cart after queue",id)
                 return False
         #QT check
         if qtToBuy > 1:
             try:
                 qtSelect = Select(WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CSS_SELECTOR, "select[class='c-dropdown v-medium fluid-item__quantity']"))))
             except TimeoutException:
-                st = taskStatus(billing['name']+"             Unable to select Quantity",id)
+                st = taskStatus("Unable to select Quantity",id)
 
             if int(billing['quantity']) >= (len(qtSelect.options)):
                 temp = len(qtSelect.options)-2
                 qtSelect.select_by_index(temp)
                 tempPurchaseAmount = temp
-                st = taskStatus(billing['name']+"             Max QT per Checkout is "+str(temp),id)
+                st = taskStatus("Max QT per Checkout is "+str(temp),id)
                 time.sleep(1)
             if int(billing['quantity']) < (len(qtSelect.options)):
                 qtSelect.select_by_visible_text(str(qtToBuy))
                 tempPurchaseAmount = qtToBuy
-                st = taskStatus(billing['name']+"             Able to checkout with requested amount of ",id)
+                st = taskStatus("Able to checkout with requested amount of ",id)
                 running = False
                 time.sleep(1)
 
         # Click checkout
-        st = taskStatus(billing['name']+"             Checking Out!",id)
+        st = taskStatus("Checking Out!",id)
         ActionChains(driver).click(checkoutButton).perform()
 
         
         try:
             buttonParent = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='button-wrap ']")))
         except TimeoutException:
-            st = taskStatus(billing['name']+"             Gotta try and check out again",id)
+            st = taskStatus("Gotta try and check out again",id)
             # Check for checkout button
             try:
                 checkoutButton = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-lg btn-block btn-primary']")))
             except TimeoutException:
-                st = taskStatus(billing['name']+"             Unable To Cart",id)
+                st = taskStatus("Unable To Cart",id)
                 return False 
             # Click checkout
-            st = taskStatus(billing['name']+"             Checking Out!",id)
+            st = taskStatus("Checking Out!",id)
             ActionChains(driver).click(checkoutButton).perform()
 
             try:
                 buttonParent = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='button-wrap ']")))
             except TimeoutException:
-                st = taskStatus(billing['name']+"             Unable to Checkout, maybe oos?",id)
+                st = taskStatus("Unable to Checkout, maybe oos?",id)
                 return False
 
 
         # Determine if we can guest checkout or log in
         try:
             guestCheckout = WebDriverWait(driver, 4).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-secondary btn-lg cia-guest-content__continue guest']")))
-            st = taskStatus(billing['name']+"             Guest Checkout",id)
+            st = taskStatus("Guest Checkout",id)
             ActionChains(driver).click(guestCheckout).perform()
         except:
-            st = taskStatus(billing['name']+"             Guest Checkout Not Available",id)
+            st = taskStatus("Guest Checkout Not Available",id)
             try:
-                st = taskStatus(billing['name']+"             Signing In",id)
+                st = taskStatus("Signing In",id)
                 accounts = accountsModule(1,None)
                 if accounts == False:
-                    st = taskStatus(billing['name']+"             Couldnt sign in, no accounts in /User Data/accounts.txt",id)
+                    st = taskStatus("Couldnt sign in, no accounts in /User Data/accounts.txt",id)
                     return
                 email = driver.find_element_by_css_selector("input[id='fld-e']")
                 email.send_keys(accounts[0]['email'])
@@ -1009,7 +1014,7 @@ def bbCartModule(sku,billing,id):
                 #check for verification code
                 try:
                     verifyButton = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[data-track='Forgot Password - Continue']")))
-                    st = taskStatus(billing['name']+"             You need to verify your account, a code has been sent to your email.",id)
+                    st = taskStatus("You need to verify your account, a code has been sent to your email.",id)
                     playsound(resource_path(assetFolder+'decline.wav'))
                     #playsound('.//assets//verify.wav')
                     print("Enter Code Below",flush=True)
@@ -1021,16 +1026,16 @@ def bbCartModule(sku,billing,id):
                
                     try:
                         error = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='c-alert-icon']")))
-                        st = taskStatus(billing['name']+"             Incorrect or expired code, restarting flow",id)
+                        st = taskStatus("Incorrect or expired code, restarting flow",id)
                         return False
                     except TimeoutException:
-                        st = taskStatus(billing['name']+"             Correct Code, moving on",id)
+                        st = taskStatus("Correct Code, moving on",id)
 
                 except TimeoutException:
                     st = ""
 
             except TimeoutException:
-                st = taskStatus(billing['name']+"             Checkout Flow Error",id)
+                st = taskStatus("Checkout Flow Error",id)
                 return False
         
         # Wait for ispu switch
@@ -1038,21 +1043,21 @@ def bbCartModule(sku,billing,id):
             ispuSwitch = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[class='ispu-card__switch']")))
             if ispuSwitch.text == "Switch to Shipping":
                 if billing["storePickup"] != True:
-                    st = taskStatus(billing['name']+"             Changing from store pickup to ship to home",id)
+                    st = taskStatus("Changing from store pickup to ship to home",id)
                     ActionChains(driver).click(ispuSwitch).perform()
             else:
                 if billing["storePickup"]:
-                    st = taskStatus(billing['name']+"             Changing from shipping to Store pickup",id)
+                    st = taskStatus("Changing from shipping to Store pickup",id)
                     ActionChains(driver).click(ispuSwitch).perform()
         except TimeoutException:
-            st = taskStatus(billing['name']+"             Unable to switch fulfilment",id)
+            st = taskStatus("Unable to switch fulfilment",id)
             #return
 
         if billing["storePickup"]:
 
             if guestCheckoutFlag:
                 try:
-                    st = taskStatus(billing['name']+"             Updating store location",id)
+                    st = taskStatus("Updating store location",id)
                     changeStore = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[data-track='Change Store']")))
                     ActionChains(driver).click(changeStore).perform()
 
@@ -1079,10 +1084,10 @@ def bbCartModule(sku,billing,id):
                     ActionChains(driver).click(selectLocationButton).perform()
                     time.sleep(2)
                 except:
-                    st = taskStatus(billing['name']+"             Unable to change to closest store",id)
+                    st = taskStatus("Unable to change to closest store",id)
                     return False
 
-                st = taskStatus(billing['name']+"             Autofill email",id)
+                st = taskStatus("Autofill email",id)
 
                 email = WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='user.emailAddress']")))
                 email.send_keys(billing['profile']['email'])
@@ -1095,9 +1100,9 @@ def bbCartModule(sku,billing,id):
                 try:
                     ccNum = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='optimized-cc-card-number']")))
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Timed out",id)
+                    st = taskStatus("Timed out",id)
                     return False
-                st = taskStatus(billing['name']+"             Autofill payment",id)
+                st = taskStatus("Autofill payment",id)
 
                 ccNum.send_keys(billing['profile']['cc'])
                 ccMM = Select(driver.find_element_by_css_selector("select[name='expiration-month']"))
@@ -1121,7 +1126,7 @@ def bbCartModule(sku,billing,id):
                 try:
                     hideSuggestions = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='autocomplete__toggle']")))
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Timed out",id)
+                    st = taskStatus("Timed out",id)
                     return False
                 #hideSuggestions.click()
                 ActionChains(driver).click(hideSuggestions).perform()
@@ -1129,7 +1134,7 @@ def bbCartModule(sku,billing,id):
                     try:
                         addy2Span = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-link v-medium address-form__showAddress2Link']")))
                     except TimeoutException:
-                        st = taskStatus(billing['name']+"             Timed out",id)
+                        st = taskStatus("Timed out",id)
                         return False
                     ActionChains(driver).click(addy2Span).perform()
                     #addy2Span.click()
@@ -1137,7 +1142,7 @@ def bbCartModule(sku,billing,id):
                     try:
                         addy2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='payment.billingAddress.street2']")))
                     except TimeoutException:
-                        st = taskStatus(billing['name']+"             Timed out",id)
+                        st = taskStatus("Timed out",id)
                         return False
 
                     addy2.send_keys(billing['profile']['billStreet2'])
@@ -1149,7 +1154,7 @@ def bbCartModule(sku,billing,id):
                 zip = driver.find_element_by_css_selector("input[id='payment.billingAddress.zipcode']")
                 zip.send_keys(billing['profile']['billZip'])
 
-                st = taskStatus(billing['name']+"             Placing Order",id)
+                st = taskStatus("Placing Order",id)
                 placeButton = driver.find_element_by_css_selector("button[class='btn btn-lg btn-block btn-primary']")
                 ActionChains(driver).click(placeButton).perform()
 
@@ -1159,10 +1164,10 @@ def bbCartModule(sku,billing,id):
                 try:
                     ispuSwitch = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[class='btn-default-link link-styled-button ispu-card__switch']")))
                     if ispuSwitch.text != "Switch to Shipping":
-                        st = taskStatus(billing['name']+"             Changing from shipping to Store pickup",id)
+                        st = taskStatus("Changing from shipping to Store pickup",id)
                         ActionChains(driver).click(ispuSwitch).perform()
                     try:
-                        st = taskStatus(billing['name']+"             Updating store location",id)
+                        st = taskStatus("Updating store location",id)
                         changeStore = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[data-track='Store Availability: Change Location']")))
                         ActionChains(driver).click(changeStore).perform()
 
@@ -1184,10 +1189,10 @@ def bbCartModule(sku,billing,id):
                         ActionChains(driver).click(selectLocationButton).perform()
                         time.sleep(2)
                     except:
-                        st = taskStatus(billing['name']+"             No store within 250 miles",id)
+                        st = taskStatus("No store within 250 miles",id)
                         return False
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Unable to switch fulfilment",id)
+                    st = taskStatus("Unable to switch fulfilment",id)
                     #return
 
         else:
@@ -1195,12 +1200,12 @@ def bbCartModule(sku,billing,id):
                 try:
                     addNewAddy = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn-default-link saved-addresses__add-new-link']")))
                     ActionChains(driver).click(addNewAddy).perform()
-                    st = taskStatus(billing['name']+"             Adding new address",id)
+                    st = taskStatus("Adding new address",id)
                 except TimeoutException:
                     st = ""
 
                 try:
-                    st = taskStatus(billing['name']+"             Autofill address info",id)
+                    st = taskStatus("Autofill address info",id)
                     saveAddress = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='address-form-modal__btn btn-secondary btn-block btn-lg btn btn-default']")))
                     time.sleep(1)
                     fName = driver.find_element_by_css_selector("input[id='ui.address.firstName']")
@@ -1212,7 +1217,7 @@ def bbCartModule(sku,billing,id):
                     try:
                         hideSuggestions = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='autocomplete__toggle']")))
                     except TimeoutException:
-                        st = taskStatus(billing['name']+"             Timed out",id)
+                        st = taskStatus("Timed out",id)
                         return False
                     #hideSuggestions.click()
                     ActionChains(driver).click(hideSuggestions).perform()
@@ -1220,7 +1225,7 @@ def bbCartModule(sku,billing,id):
                         try:
                             addy2Span = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-link v-medium address-form__showAddress2Link']")))
                         except TimeoutException:
-                            st = taskStatus(billing['name']+"             Timed out",id)
+                            st = taskStatus("Timed out",id)
                             return False
                         ActionChains(driver).click(addy2Span).perform()
                         #addy2Span.click()
@@ -1228,7 +1233,7 @@ def bbCartModule(sku,billing,id):
                         try:
                             addy2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='ui.address.street2']")))
                         except TimeoutException:
-                            st = taskStatus(billing['name']+"             Timed out",id)
+                            st = taskStatus("Timed out",id)
                             return False
 
                         addy2.send_keys(billing['profile']['billStreet2'])
@@ -1250,7 +1255,7 @@ def bbCartModule(sku,billing,id):
                     addNewCard = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[data-track='Payment Method: Add a new card']")))
                     ActionChains(driver).click(addNewCard).perform()
                 
-                    st = taskStatus(billing['name']+"             Autofill payment",id)
+                    st = taskStatus("Autofill payment",id)
 
                     ccNum = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='optimized-cc-card-number']")))
 
@@ -1270,7 +1275,7 @@ def bbCartModule(sku,billing,id):
                     picUrl = driver.find_element_by_css_selector("img[class='item-list__image-content']").get_attribute("src")
                     name = driver.find_element_by_css_selector("h4[class='item-list__spacer text-left item-list__title']").text
 
-                    st = taskStatus(billing['name']+"             Placing Order",id)
+                    st = taskStatus("Placing Order",id)
                     placeButton = driver.find_element_by_css_selector("button[class='btn btn-lg btn-block btn-primary button__fast-track']")
                     time.sleep(1.5)
                     ActionChains(driver).click(placeButton).perform()
@@ -1278,7 +1283,7 @@ def bbCartModule(sku,billing,id):
                     stopTime = time.time()
 
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             ERROR with sign in checkout",id)
+                    st = taskStatus("ERROR with sign in checkout",id)
                     return False
             else:
                 inputNum = "2"
@@ -1288,13 +1293,13 @@ def bbCartModule(sku,billing,id):
                     fName.send_keys(billing['profile']['fName'])
 
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Best Buy antibot measures detected",id)
+                    st = taskStatus("Best Buy antibot measures detected",id)
                     try:
                         inputNum = "5"
                         fName = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='consolidatedAddresses.ui_address_"+inputNum+".firstName']")))
                         fName.send_keys(billing['profile']['fName'])
                     except TimeoutException:
-                        st = taskStatus(billing['name']+"             Error with name input fields",id)
+                        st = taskStatus("Error with name input fields",id)
                         return False
      
                 lName = driver.find_element_by_css_selector("input[id='consolidatedAddresses.ui_address_"+inputNum+".lastName']")
@@ -1308,7 +1313,7 @@ def bbCartModule(sku,billing,id):
                 try:
                     hideSuggestions = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='autocomplete__toggle']")))
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Timed out",id)
+                    st = taskStatus("Timed out",id)
                     return False
                 #hideSuggestions.click()
                 ActionChains(driver).click(hideSuggestions).perform()
@@ -1317,7 +1322,7 @@ def bbCartModule(sku,billing,id):
                     try:
                         addy2Span = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[class='btn btn-link v-medium address-form__showAddress2Link']")))
                     except TimeoutException:
-                        st = taskStatus(billing['name']+"             Timed out",id)
+                        st = taskStatus("Timed out",id)
                         return False
                     ActionChains(driver).click(addy2Span).perform()
                     #addy2Span.click()
@@ -1325,7 +1330,7 @@ def bbCartModule(sku,billing,id):
                     try:
                         addy2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='consolidatedAddresses.ui_address_"+inputNum+".street2']")))
                     except TimeoutException:
-                        st = taskStatus(billing['name']+"             Timed out",id)
+                        st = taskStatus("Timed out",id)
                         return False
 
                     addy2.send_keys(billing['profile']['billStreet2'])
@@ -1346,9 +1351,9 @@ def bbCartModule(sku,billing,id):
                 try:
                     ccNum = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[id='optimized-cc-card-number']")))
                 except TimeoutException:
-                    st = taskStatus(billing['name']+"             Timed out",id)
+                    st = taskStatus("Timed out",id)
                     return False
-                st = taskStatus(billing['name']+"             Autofill payment",id)
+                st = taskStatus("Autofill payment",id)
 
                 ccNum.send_keys(billing['profile']['cc'])
                 ccMM = Select(driver.find_element_by_css_selector("select[name='expiration-month']"))
@@ -1363,7 +1368,7 @@ def bbCartModule(sku,billing,id):
                 picUrl = driver.find_element_by_css_selector("img[class='item-list__image-content']").get_attribute("src")
                 name = driver.find_element_by_css_selector("h4[class='item-list__spacer text-left item-list__title']").text
 
-                st = taskStatus(billing['name']+"             Placing Order",id)
+                st = taskStatus("Placing Order",id)
                 placeButton = driver.find_element_by_css_selector("button[class='btn btn-lg btn-block btn-primary']")
                 ActionChains(driver).click(placeButton).perform()
 
@@ -1374,14 +1379,14 @@ def bbCartModule(sku,billing,id):
         try:
             alert = WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[class='order-errors']")))
         except TimeoutException:
-            st = taskStatus(billing['name']+"             No Errors!",id)
+            st = taskStatus("No Errors!",id)
         
         if alert != None:
             cardDeclineText = "Unfortunately, we were unable to process your credit card. Please try again or use a different card to continue with your order. For questions regarding your credit card, please contact your bank."
             maxQtLimitText = "If you have other items you'd like to buy, you'll need to remove this item to continue."
-            st = taskStatus(billing['name']+"             Order Error!",id)
+            st = taskStatus("Order Error!",id)
             if cardDeclineText == driver.find_element_by_css_selector("div[class='error-spacing']").text:
-                st = taskStatus(billing['name']+"             Card Declined",id)
+                st = taskStatus("Card Declined",id)
                 hitInfo = {
                 "item": sku,
                 "itemName": name,
@@ -1395,9 +1400,9 @@ def bbCartModule(sku,billing,id):
                 playsound(resource_path(assetFolder+'decline.wav'))
                 return
             if maxQtLimitText == driver.find_element_by_css_selector("div[class='error-spacing']").text:
-                st = taskStatus(billing['name']+"             Max Items reached for this profile and sku",id)
+                st = taskStatus("Max Items reached for this profile and sku",id)
                 return
-            st = taskStatus(billing['name']+"             Max Items reached for this profile and sku",id)
+            st = taskStatus("Max Items reached for this profile and sku",id)
             return
             return False
 
@@ -1405,7 +1410,7 @@ def bbCartModule(sku,billing,id):
         try:
             test = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "span[class='thank-you-enhancement__emphasis']")))
         except TimeoutException:
-            st = taskStatus(billing['name']+"             Timed out",id)
+            st = taskStatus("Timed out",id)
         order = test[2].text
     
         hitInfo = {
@@ -1419,7 +1424,7 @@ def bbCartModule(sku,billing,id):
             }
         webhookModule(hitInfo,{},1)
         playsound(resource_path(assetFolder+'success.mp3'))
-        st = taskStatus(billing['name']+"             Checkout Successful! Total = " + total + " & took " + str(stopTime-startTime),id)
+        st = taskStatus("Checkout Successful! Total = " + total + " & took " + str(stopTime-startTime),id)
         qtToBuy -= tempPurchaseAmount
         if qtToBuy == 0:
             st = taskStatus("",-2)
@@ -2497,6 +2502,8 @@ class TaskPane:
                     status = getTaskStatus(self.tasks['taskList'][i])
                     if status != False:
                         self.lblStatus[i].set(status['statusList'][0])
+                else:
+                    self.lblStatus[i].set("Not Running...")
 
     def __init__(self):
         self.frame = Frame(width=1070,height=720)
@@ -2690,9 +2697,9 @@ class TaskPane:
         self.taskButtons[taskPos].grid(row=taskPos+2,column=0)
 
         print(self.tasks['taskList'][taskPos]['name'])
-        self.lblStatus[taskPos].set('Not Running...')
-
+        
         root.threads[taskPos].terminate()
+        root.threads[taskPos] = False
 
     def getPane(self):
         self.tasks = taskSaveModule(1,{},None)
