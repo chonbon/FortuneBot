@@ -611,6 +611,10 @@ def taskMod(task):
                         break
             time.sleep(1)
 
+def setTempfilename(tempfilename):
+    global tempFilename
+    tempFilename = tempfilename
+
 # Status manager for task running
 def taskStatus(status, id):
     temp = status
@@ -831,7 +835,7 @@ def bbCartModule(sku,billing,id):
     if settings["headless"] == False:
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
-        chrome_options.add_argument("--log-level=3")
+        options.add_argument("--log-level=3")
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
@@ -2092,323 +2096,6 @@ def app():
     root.afterSplash()
     return
 
-    while running:
-        print(welcomeText)
-
-        if userInput == None:
-            print("Main Menu\n1. Search\n2. Tasks\n3. Profiles\n4. Webhook\n5. Settings\n6. Exit")
-            userInput = input()
-
-        # Search Menu
-        if str(userInput).lower() == "search" or str(userInput) == "1":
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print("Quick Search\nChoose BestBuy, Newegg, Home Depot, Pokemon Center or Back:")
-            searchInput = input()
-            if str(searchInput).lower() == "bestbuy":
-                print("Enter the sku:")
-                sku = {}
-                sku['name'] = "Search"
-                sku['sku'] = input()
-                bbSearchModule(sku, None)
-            if str(searchInput).lower() == "newegg":
-                print("Enter the model:")
-                neweggSearchModule(input(), None)
-            if str(searchInput).lower() == "home depot":
-                print("Enter the internet#:")
-                homedepotSearchModule(input(), None)
-            if str(searchInput).lower() == "pokemon center":
-                print("Enter the sku:")
-                pokemonSearchModule(input(), None)
-            if str(searchInput).lower() == "back":
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-
-        # Tasks Menu
-        if str(userInput).lower() == "tasks" or str(userInput) == "2":
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print("Tasks Module\n1.Run\n2.Quick Task\n3.Create\n4.View\n5.Delete\n6.Back")
-            taskInput = input()
-            if str(taskInput).lower() == "run" or str(taskInput) == "1":
-                tasks = taskSaveModule(1,{})
-                if tasks == False:
-                    print("You dont have any Tasks to Run!")
-                if tasks != False:
-                    print("Choose one of the tasks below by name, type all for all or hit any key to go back\n")
-                    counter = 1
-                    for task in tasks["taskList"]:
-                        print(str(counter)+". "+task["name"])
-                        counter+=1
-                    print()
-                    selectInput = input()
-                    if str(selectInput).lower() == "all":
-                        for i in range(len(tasks["taskList"])):
-                            #with tempfile.NamedTemporaryFile(suffix='.command') as f:
-                                #tempString = "#! /bin/bash\ncd ~/Desktop/App Projects(Local)/FortuneBot/\npython3 main.py {} True\n".format(i)
-                                #f.write(tempString.encode('utf-8'))
-                                #st = os.stat(f.name)
-                                #os.chmod(f.name, st.st_mode | stat.S_IEXEC)
-                                #subprocess.call(['open', '-W', f.name])
-                            if exeMode == True:
-                                subprocess.Popen('start /wait FortuneBot.exe "'+str(i)+'" True', shell=True)
-                            if exeMode == False:
-                                subprocess.Popen('start /wait python FortuneBot.py "'+str(i)+'" True', shell=True)
-                    for i in range(len(tasks["taskList"])):
-                        if str(selectInput).lower() == tasks["taskList"][i]["name"].lower() or selectInput == str(i+1):
-
-                            #with tempfile.NamedTemporaryFile(suffix='.command') as f:
-
-                                #tempString = "#! /bin/bash\ncd ~/Desktop/App Projects(Local)/FortuneBot/\npython3 main.py {} True\n".format(i)
-                                #f.write(tempString.encode('utf-8'))
-                                #st = os.stat(f.name)
-                                #os.chmod(f.name, st.st_mode | stat.S_IEXEC)
-                                #subprocess.call(['open', '-W', f.name])
-                            if exeMode == True:
-                                subprocess.Popen('start /wait FortuneBot.exe "'+str(i)+'" True', shell=True)
-                            if exeMode == False:
-                                subprocess.Popen('start /wait python FortuneBot.py "'+str(i)+'" True', shell=True)
-            if str(taskInput).lower() == "quick task" or str(taskInput) == "2":
-                settings = settingsModule(1,None)
-                if settings['qtProfile'] == "":
-                    print("Quick Task profile not set, go to settings and set one!")
-                    taskInput = None
-
-                print("Enter the sku to start or type back: ")
-                sku = input()
-                if str(sku).lower() == "back":
-                    taskInput = None
-                else:
-                    task = {
-                        'name': 'QuickTask'+sku,
-                        'sku':sku,
-                        'quantity':1,
-                        'storePickup':False,
-                        'profile':settings['qtProfile'],
-                        'date':False,
-                        'time':False
-                        }
-                    taskSaveModule(2,task)
-                    tasks = taskSaveModule(1,{})
-
-                    if exeMode == True:
-                        subprocess.Popen('start /wait FortuneBot.exe "'+str(len(tasks['taskList'])-1)+'" True', shell=True)
-                    if exeMode == False:
-                        subprocess.Popen('start /wait python FortuneBot.py "'+str(len(tasks['taskList'])-1)+'" True', shell=True)
-            if str(taskInput).lower() == "create" or str(taskInput) == "3":
-                task = {}
-                print("Enter Task Name")
-                task['name'] = input()
-                print("Enter item Sku")
-                task['sku'] = input()
-                print("Enter item quantity")
-                task['quantity'] = input()
-                print("Store Pickup? Yes/No")
-                storePickup = input()
-                if str(storePickup).lower() == "yes":
-                    task['storePickup'] = True
-                if str(storePickup).lower() == "no":
-                    task['storePickup'] = False
-                print("Choose Profile")
-                profiles = profileModule(1,{})
-                if profiles == False:
-                    print("You dont have any profiles!")
-                    taskInput = None
-                if profiles != False:
-                    counter = 1
-                    for profile in profiles["profileList"]:
-                        print(str(counter)+". "+profile["profileName"])
-                        counter += 1
-                profileSelect = input()
-                for i in range(len(profiles["profileList"])):
-                    if profiles["profileList"][i]["profileName"].lower() == profileSelect.lower() or profileSelect == str(i+1):
-                        task['profile'] = profiles["profileList"][i]
-                print("Is this for a task in the future? Yes/No")
-                dateTask = input()
-                if str(dateTask).lower() == "yes":
-                    print("Enter task date, i.e. MM/DD/YYYY")
-                    task['date'] = input()
-                    print("Enter time to execute, i.e. 12:00PM")
-                    task['time'] = input()
-                if str(dateTask).lower() == "no":
-                    task['date'] = False
-                    task['time'] = False
-                print("Confirm Task Info:")
-                print("Name: "+task["name"])
-                print("Sku: "+task["sku"])
-                print("Quantity: "+task["quantity"])
-                print("Store Pickup: "+str(task["storePickup"]))
-                print("Profile: "+task["profile"]["profileName"])
-                print("Date: "+str(task["date"]))
-                print("Time: "+str(task["time"]))
-                print("Correct? Yes/No")
-                answer = input()
-                if str(answer).lower() == "yes":
-                    taskSaveModule(2,task)
-                if str(answer).lower() == "no":
-                    taskInput = None
-            if str(taskInput).lower() == "view" or str(taskInput) == "4":
-                tasks = taskSaveModule(1,{})
-                if tasks == False:
-                    print("You dont have any Tasks!")
-                if tasks != False:
-                    for task in tasks["taskList"]:
-                        print(task["name"])
-                input()
-            if str(taskInput).lower() == "delete" or str(taskInput) == "5":
-                tasks = taskSaveModule(1,{})
-                if tasks == False:
-                    print("You dont have any Tasks to Delete!")
-                if tasks != False:
-                    for task in tasks["taskList"]:
-                        print(task["name"])
-                    print("Type the name of the task you want to delete")
-                    taskSaveModule(3,input())
-            if str(taskInput).lower() == "back" or str(taskInput) == "6":
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-
-        # Profiles Menu
-        if str(userInput).lower() == "profiles" or str(userInput) == "3":
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print("Profiles Module\n1.Create\n2.Delete\n3.View\n4.Back")
-            profileInput = input()
-
-            if str(profileInput).lower() == "create" or str(profileInput) == "1":
-                profile = {}
-                print("Profile Name")
-                profile['profileName'] = input()
-                print("First Name")
-                profile['fName'] = input()
-                print("Last Name")
-                profile['lName'] = input()
-                print("Email")
-                profile['email'] = input()
-                print("Phone")
-                profile['phone'] = input()
-                print("Billing Street 1")
-                profile['billStreet1'] = input()
-                print("Billing Street 2, hit enter to skip")
-                profile['billStreet2'] = input()
-                print("Billing City")
-                profile['billCity'] = input()
-                print("Billing State - Two Letters i.e. PA")
-                profile['billState'] = input()
-                print("Billing Zip")
-                profile['billZip'] = input()
-                print("Credit Card #")
-                profile['cc'] = input()
-                print("Credit Card Exp Month i.e. MM")
-                profile['ccExpMM'] = input()
-                print("Credit Card Exp Year i.e. YYYY")
-                profile['ccExpYYYY'] = input()
-                print("Credit Card CVV")
-                profile['cvv'] = input()
-                profileModule(2,profile)
-            if str(profileInput).lower() == "delete" or str(profileInput) == "2":
-                profiles = profileModule(1,{})
-                if profiles != False:
-                    for profile in profiles["profileList"]:
-                        print(profile["profileName"])
-                    print("Type the name of the profile you want to delete")
-                    profileModule(3,input())
-                if profiles == False:
-                    print("You dont have any profiles to delete!")
-            if str(profileInput).lower() == "view" or str(profileInput) == "3":
-                profiles = profileModule(1,{})
-                if profiles == False:
-                    print("You dont have any profiles!")
-                if profiles != False:
-                    for profile in profiles["profileList"]:
-                        print(profile["profileName"])
-                input()
-            if str(profileInput).lower() == "back" or str(profileInput) == "4":
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-
-        # Webhook Settings
-        if str(userInput).lower() == "webhook" or str(userInput) == "4":
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print("Webhook Settings")
-            print("1.Add\n2.Remove\n3.Back")
-            webhookInput = input()
-
-            if str(webhookInput).lower() == "add" or str(webhookInput) == "1":
-                print("Paste The Discord webhook you would like to add")
-                addWebhook = input()
-                webhookModule({},addWebhook,3)
-            if str(webhookInput).lower() == "remove" or str(webhookInput) == "2":
-                webhooks = webhookModule({},"",2)
-                if webhooks != False and len(webhooks["urls"]) > 0:
-                    print("Choose the number of the webhook you want to remove")
-                    for i in range(len(webhooks["urls"])):
-                        print(str(i+1)+". "+webhooks["urls"][i])
-                    webhookModule({},input(),4)
-                print("You dont have any webhooks yet!")
-            if str(webhookInput).lower() == "back" or str(webhookInput) == "3":
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-
-        # General Settings
-        if str(userInput).lower() == "settings" or str(userInput) == "5":
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print("General Settings")
-            print("Type the option to change its value, or type back")
-            settings = settingsModule(1,None)
-            if settings == False:
-                settings['forceCheckout'] = False
-                settings['headless'] = False
-                settings['queueTasks'] = 1
-
-            print("1. Force Checkout : "+str(settings['forceCheckout']))
-            print("2. Dev Mode : "+str(settings['headless']))
-            print("3. Queue Tasks : "+str(settings['queueTasks']))
-            if settings['qtProfile'] == "":
-                print("4. Quick Task Profile: "+"Not Set")
-            else:
-                print("4. Quick Task Profile: "+settings['qtProfile']['profileName'])
-
-            userCheckout = input()
-            if str(userCheckout).lower() == "force checkout" or str(userCheckout) == "1":
-                settingsModule(2,not settings['forceCheckout'])
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-                print("Saved setting!\n")
-            if str(userCheckout).lower() == "dev mode" or str(userCheckout) == "2":
-                settingsModule(3,not settings['headless'])
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-                print("Saved setting!\n")
-            if str(userCheckout).lower() == "queue tasks" or str(userCheckout) == "3":
-                print("enter how many you would like for when the queue is detected")
-                settingsModule(5,input())
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-                print("Saved setting!\n")
-            if str(userCheckout).lower() == "quick task profile" or str(userCheckout) == "4":
-                profiles = profileModule(1,{})
-                if profiles == False:
-                    print("You dont have any profiles!")
-                    taskInput = None
-                if profiles != False:
-                    print("Select a profile to set as the quick task profile.")
-                    counter = 1
-                    for profile in profiles["profileList"]:
-                        print(str(counter)+". "+profile["profileName"])
-                        counter += 1
-                profileSelect = input()
-                for i in range(len(profiles["profileList"])):
-                    if profiles["profileList"][i]["profileName"].lower() == profileSelect.lower() or profileSelect == str(i+1):
-                        settingsModule(6,profiles["profileList"][i])
-
-            if str(userCheckout).lower() == "back":
-                userInput = None
-                os.system('cls' if os.name == 'nt' else 'clear')
-
-        # Exit
-        if str(userInput).lower() == "exit" or str(userInput) == "6":
-            print("Exiting FortuneBot, Bye!")
-            running = False
-            return
-
 def appThread():
     global appT
     appT = Thread(target=app)
@@ -2495,8 +2182,11 @@ class MenuPane:
 # Tasks Pane
 class TaskPane:
     
+    statusFlag = True
+
     def taskStatusThread(self):
-        while True:
+
+        while self.statusFlag:
             for i in range(len(root.threads)):
                 if root.threads[i] != False:
                     status = getTaskStatus(self.tasks['taskList'][i])
@@ -2505,6 +2195,8 @@ class TaskPane:
                 else:
                     self.lblStatus[i].set("Not Running...")
 
+            time.sleep(0.5)
+    
     def __init__(self):
         self.frame = Frame(width=1070,height=720)
         self.statusThread = Thread(target=self.taskStatusThread)
@@ -2678,28 +2370,41 @@ class TaskPane:
         Button(self.popup,text='Save Task',command= lambda: self.saveTask(position)).grid(row=10,column=1)
 
     def runTask(self,taskPos):
+
+        self.statusFlag = True
         self.taskButtons[taskPos].grid_forget()
         self.taskButtons[taskPos] = Button(self.frame,text="Stop",command= lambda: self.stopTask(taskPos))
         self.taskButtons[taskPos].grid(row=taskPos+2,column=0)
 
-        print(self.tasks['taskList'][taskPos]['name'])
         self.lblStatus[taskPos].set('Running...')
 
         root.threads[taskPos] = Process(target=taskMod, args=(self.tasks['taskList'][taskPos],))
         root.threads[taskPos].start()
 
         if self.statusThread.is_alive() == False:
+            self.statusThread = Thread(target=self.taskStatusThread)
             self.statusThread.start()
 
     def stopTask(self,taskPos):
+
+        if sys.platform == 'win32':
+            setTempfilename(".\\User Data\\Temp\\"+self.tasks['taskList'][taskPos]['name']+"Status.json")
+        else:
+            setTempfilename("./User Data/Temp/"+self.tasks['taskList'][taskPos]['name']+"Status.json")
+            
         self.taskButtons[taskPos].grid_forget()
         self.taskButtons[taskPos] = Button(self.frame,text="Run",command= lambda: self.runTask(taskPos))
         self.taskButtons[taskPos].grid(row=taskPos+2,column=0)
 
-        print(self.tasks['taskList'][taskPos]['name'])
-        
+        taskStatus("Not Running...",0)
         root.threads[taskPos].terminate()
         root.threads[taskPos] = False
+
+        if not any(root.threads):
+            print("Thread killed")
+            self.statusFlag = False
+            self.statusThread.join()
+            self.lblStatus[taskPos].set("Not Running...")
 
     def getPane(self):
         self.tasks = taskSaveModule(1,{},None)
@@ -2730,10 +2435,10 @@ class TaskPane:
 
         self.btn_qt.grid(row=0,column=3)
         Label(self.frame,text="Task Name").grid(row=1,column=1)
-        Label(self.frame,text="Task Status").grid(row=1,column=5)
+        Label(self.frame,text="Task Status").grid(row=1,column=5,padx=150)
 
         for i in range(len(self.tasks['taskList'])):
-            if self.lblStatus[i].get() == 'Not Running...':
+            if self.threads[i] == False:
                 self.taskButtons.append(Button(self.frame,text="Run",command= lambda i=i: self.runTask(i)))
                 self.taskButtons[i].grid(row=i+2,column=0)
             else:
