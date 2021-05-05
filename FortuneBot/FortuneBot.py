@@ -518,7 +518,6 @@ def taskMod(task):
     if "forceCheckout" not in settings:
         settings["forceCheckout"] = False
         settingsModule(2,False)
-
     while running:
         taskStatus(None, -1)
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -526,91 +525,91 @@ def taskMod(task):
             today = date.today().strftime("%m/%d/%Y")
             now = datetime.now(timezone('US/Eastern'))
             if task['date'] <= today:
-              if task['date'] == today:
-                #task is today check for time
-                taskTime = datetime.strptime(task['time'], "%I:%M%p")
-                if taskTime.time() < now.time():
-                  print(task['name']+"               running...",end='\r')
-                  result = bbSearchModule(task,None)
-                  if result == True:
-                    print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
-                    cart = bbCartModule(task['sku'],task,0)
-                    if cart == True:
-                      print(task['name']+"               Success!",end='\r')
-                      running = False
-                      break
-                    if cart == False:
-                      print(task['name']+"               Error Carting",end='\r')
-                    if cart == None:
-                      break
+                if task['date'] == today:
+                    #task is today check for time
+                    taskTime = datetime.strptime(task['time'], "%I:%M%p")
+                    if taskTime.time() < now.time():
+                        print(task['name']+"               running...",end='\r')
+                        result = bbSearchModule(task,None)
+                        if result == True:
+                            print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
+                            cart = bbCartModule(task['sku'],task,0)
+                        if cart == True:
+                            print(task['name']+"               Success!",end='\r')
+                            running = False
+                            break
+                        if cart == False:
+                            print(task['name']+"               Error Carting",end='\r')
+                        if cart == None:
+                            break
 
-                  if settings['forceCheckout'] == True:
-                     print(task['name']+"               Forcing Cart and Checkout",end='\r')
-                     cart = bbCartModule(task['sku'],task,0)
-                     if cart == True:
-                        print(task['name']+"               Success!",end='\r')
-                        running = False
-                        break
-                     if cart == False:
-                        print(task['name']+"               Force Carting did not work, trying again.",end='\r')
-                     if cart == None:
-                        break
-                  continue
-                print(task['name']+"               Not Running...",end='\r')
-                continue
-              print(task['name']+"               Running Restock!",end='\r')
-              result = bbSearchModule(task,None)
-              if result == True:
-                    print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
-                    cart = bbCartModule(task['sku'],task,0)
-                    if cart == True:
-                      print(task['name']+"               Success!",end='\r')
-                      running = False
-                      break
-                    if cart == False:
-                        print(task['name']+"               Error Carting",end='\r')
-                    if cart == None:
-                        break
-              if settings['forceCheckout'] == True:
-                     print(task['name']+"               Forcing Cart and Checkout",end='\r')
-                     cart = bbCartModule(task['sku'],task,0)
-                     if cart == True:
-                        print(task['name']+"               Success!",end='\r')
-                        running = False
-                        break
-                     if cart == False:
-                        print(task['name']+"               Force Carting did not work, trying again.",end='\r')
-                     if cart == None:
-                        break
-              time.sleep(1)
-              continue
-              #task was in the past, dont check for time and run    
-            print(task['name']+"               Not Running today...",end='\r')
-        print(task['name']+"               running...",end='\r')
-        result = bbSearchModule(task,None)
-        if result == True:
-            print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
-            cart = bbCartModule(task['sku'],task,0)
-            if cart == True:
-                print(task['name']+"               Success!",end='\r')
-                running = False
-                break
-            if cart == False:
-                print(task['name']+"               Error Carting",end='\r')
-            if cart == None:
-                break
-            if settings['forceCheckout'] == True:
-                print(task['name']+"               Forcing Cart and Checkout",end='\r')
+                        if settings['forceCheckout'] == True:
+                            print(task['name']+"               Forcing Cart and Checkout",end='\r')
+                            cart = bbCartModule(task['sku'],task,0)
+                            if cart == True:
+                                print(task['name']+"               Success!",end='\r')
+                                running = False
+                                break
+                            if cart == False:
+                                print(task['name']+"               Force Carting did not work, trying again.",end='\r')
+                            if cart == None:
+                                break
+                        continue
+                    print(task['name']+"               Not Running...",end='\r')
+                    continue
+                    print(task['name']+"               Running Restock!",end='\r')
+                    result = bbSearchModule(task,None)
+                    if result == True:
+                        print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
+                        cart = bbCartModule(task['sku'],task,0)
+                        if cart == True:
+                            print(task['name']+"               Success!",end='\r')
+                            running = False
+                            break
+                        if cart == False:
+                            print(task['name']+"               Error Carting",end='\r')
+                        if cart == None:
+                            break
+                    if settings['forceCheckout'] == True:
+                            print(task['name']+"               Forcing Cart and Checkout",end='\r')
+                            cart = bbCartModule(task['sku'],task,0)
+                            if cart == True:
+                                print(task['name']+"               Success!",end='\r')
+                                running = False
+                                break
+                            if cart == False:
+                                print(task['name']+"               Force Carting did not work, trying again.",end='\r')
+                            if cart == None:
+                                break
+                    time.sleep(1)
+                    continue
+                    #task was in the past, dont check for time and run    
+                print(task['name']+"               Not Running today...",end='\r')
+            print(task['name']+"               running...",end='\r')
+            result = bbSearchModule(task,None)
+            if result == True:
+                print(task['name']+"               Item In Stock, attempting to checkout",end='\r')
                 cart = bbCartModule(task['sku'],task,0)
                 if cart == True:
                     print(task['name']+"               Success!",end='\r')
                     running = False
                     break
                 if cart == False:
-                    print(task['name']+"               Force Carting did not work, trying again.",end='\r')
+                    print(task['name']+"               Error Carting",end='\r')
                 if cart == None:
                     break
-        time.sleep(1)
+                if settings['forceCheckout'] == True:
+                    print(task['name']+"               Forcing Cart and Checkout",end='\r')
+                    cart = bbCartModule(task['sku'],task,0)
+                    if cart == True:
+                        print(task['name']+"               Success!",end='\r')
+                        running = False
+                        break
+                    if cart == False:
+                        print(task['name']+"               Force Carting did not work, trying again.",end='\r')
+                    if cart == None:
+                        break
+            time.sleep(1)
 
 # Status manager for task running
 def taskStatus(status, id):
@@ -650,6 +649,20 @@ def taskStatus(status, id):
             print(data["statusList"][i])
 
     return
+
+# returns statuslist from a task
+def getTaskStatus(task):
+    tempFilename = ".\\User Data\\Temp\\"+task["name"]+"Status.json"
+    
+    data = {}
+
+    with open(tempFilename, 'r') as json_file:
+        json_file = json_file.read()
+        if len(json_file) != 0:
+            data = json.loads(json_file)
+            return data
+        else:
+            return False
 
 # Saves Tasks to the file
 def taskSaveModule(mode, task, position):
@@ -773,9 +786,9 @@ def bbSearchModule(sku,proxy):
 def bbCartModule(sku,billing,id):
     global tempFilename
     if sys.platform == 'win32':
-        tempFilename = ".\\User Data\\Temp\\"+task["name"]+"Status.json"
+        tempFilename = ".\\User Data\\Temp\\"+billing["name"]+"Status.json"
     else:
-        tempFilename = "./User Data/Temp/"+task["name"]+"Status.json"
+        tempFilename = "./User Data/Temp/"+billing["name"]+"Status.json"
 
     settings = settingsModule(1,None)
     proxies = proxyModule()
@@ -2476,15 +2489,20 @@ class MenuPane:
 
 # Tasks Pane
 class TaskPane:
-
+    
     def taskStatusThread(self):
-        print("TODO")
+        while True:
+            for i in range(len(root.threads)):
+                if root.threads[i] != False:
+                    status = getTaskStatus(self.tasks['taskList'][i])
+                    if status != False:
+                        self.lblStatus[i].set(status['statusList'][0])
 
     def __init__(self):
         self.frame = Frame(width=1070,height=720)
         self.statusThread = Thread(target=self.taskStatusThread)
         self.stores = ['Best Buy']
-
+        
     def saveTask(self,position):
         task = {}
 
@@ -2504,7 +2522,10 @@ class TaskPane:
                     'date':False,
                     'time':False
                     }
+
             wait = taskSaveModule(2,task,-1)
+            self.threads.append(False)
+            self.lblStatus.append(StringVar(self.frame,value='Not Running...'))
             root.showTasks()
             return
 
@@ -2546,14 +2567,18 @@ class TaskPane:
 
         wait = taskSaveModule(2,task,position)
 
+        self.threads.append(False)
+        self.lblStatus.append(StringVar(self.frame,value='Not Running...'))
+
         self.popup.destroy()
         root.showTasks()
 
     def taskAction(self,mode,position):
         # Delete Task
         if mode == 2:
-            print(position)
             taskSaveModule(3,None,position)
+            self.threads.pop(position)
+            self.lblStatus.pop(position)
             root.showTasks()
             return
 
@@ -2562,6 +2587,8 @@ class TaskPane:
             task = self.tasks['taskList'][position]
             task['name']+='Clone'
             wait = taskSaveModule(2,task,-1)
+            self.threads.append(False)
+            self.lblStatus.append(StringVar(self.frame,value='Not Running...'))
             root.showTasks()
             return
 
@@ -2643,11 +2670,43 @@ class TaskPane:
 
         Button(self.popup,text='Save Task',command= lambda: self.saveTask(position)).grid(row=10,column=1)
 
-    def runTask(self,task):
-        print("TODO")
+    def runTask(self,taskPos):
+        self.taskButtons[taskPos].grid_forget()
+        self.taskButtons[taskPos] = Button(self.frame,text="Stop",command= lambda: self.stopTask(taskPos))
+        self.taskButtons[taskPos].grid(row=taskPos+2,column=0)
+
+        print(self.tasks['taskList'][taskPos]['name'])
+        self.lblStatus[taskPos].set('Running...')
+
+        root.threads[taskPos] = Process(target=taskMod, args=(self.tasks['taskList'][taskPos],))
+        root.threads[taskPos].start()
+
+        if self.statusThread.is_alive() == False:
+            self.statusThread.start()
+
+    def stopTask(self,taskPos):
+        self.taskButtons[taskPos].grid_forget()
+        self.taskButtons[taskPos] = Button(self.frame,text="Run",command= lambda: self.runTask(taskPos))
+        self.taskButtons[taskPos].grid(row=taskPos+2,column=0)
+
+        print(self.tasks['taskList'][taskPos]['name'])
+        self.lblStatus[taskPos].set('Not Running...')
+
+        root.threads[taskPos].terminate()
+
     def getPane(self):
         self.tasks = taskSaveModule(1,{},None)
         self.qtSku = StringVar(self.frame)
+        self.taskButtons = []
+
+        self.threads = root.threads
+        self.lblStatus = root.lblStatus
+
+        for i in range(len(self.tasks['taskList'])):
+            if len(self.threads) < i + 1:
+                self.threads.append(False)
+            if len(self.lblStatus) < i + 1:
+                self.lblStatus.append(StringVar(self.frame,value='Not Running...'))
 
         self.btn_new = Button(self.frame,text="New Task",command= lambda: self.taskAction(0,-1))
         self.btn_new.grid(row=0,column=0)
@@ -2664,13 +2723,20 @@ class TaskPane:
 
         self.btn_qt.grid(row=0,column=3)
         Label(self.frame,text="Task Name").grid(row=1,column=1)
+        Label(self.frame,text="Task Status").grid(row=1,column=5)
 
         for i in range(len(self.tasks['taskList'])):
-            Button(self.frame,text="Run",command= lambda i=i: self.taskAction(0,i)).grid(row=i+2,column=0)
+            if self.lblStatus[i].get() == 'Not Running...':
+                self.taskButtons.append(Button(self.frame,text="Run",command= lambda i=i: self.runTask(i)))
+                self.taskButtons[i].grid(row=i+2,column=0)
+            else:
+                self.taskButtons.append(Button(self.frame,text="Stop",command= lambda i=i: self.stopTask(i)))
+                self.taskButtons[i].grid(row=i+2,column=0)
             Label(self.frame,text=self.tasks['taskList'][i]['name']).grid(row=i+2,column=1)
             Button(self.frame,text="Edit",command= lambda i=i: self.taskAction(1,i)).grid(row=i+2,column=2)
             Button(self.frame,text="Clone",command= lambda i=i: self.taskAction(3,i)).grid(row=i+2,column=3)
             Button(self.frame,text="Delete",command= lambda i=i: self.taskAction(2,i)).grid(row=i+2,column=4)
+            Label(self.frame,textvariable=self.lblStatus[i]).grid(row=i+2,column=5)
         return self.frame
 
 # Profiles Pane
@@ -2771,6 +2837,7 @@ class ProfilePane:
             wait = profileModule(2,profile,-1)
             root.showProfiles()
             return
+
         self.popup = Tk()
         self.popup.resizable(False, False)
         self.popup.geometry('650x300')
@@ -2963,7 +3030,9 @@ class RootWindow:
         self.splash = SplashPane()
         self.splashPane = self.splash.frame
 
-        
+        self.lblStatus = []
+        self.threads = []
+
         self.roots.resizable(False, False)
         self.roots.title("FortuneBot")
         self.roots.geometry('1280x720')
@@ -3004,13 +3073,15 @@ class RootWindow:
         self.content = SettingsPane().getPane()
         self.content.pack(fill=BOTH)
 
-root = RootWindow()
-
 # Main Function
 if __name__ == "__main__":
+    global root
+
     multiprocessing.freeze_support()
 
     wait = appInit()
+
+    root = RootWindow()
     
     root.start()
     
